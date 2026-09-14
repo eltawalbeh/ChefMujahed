@@ -27,6 +27,8 @@ import ProductBulkImportPage from '@/pages/dashboard/ProductBulkImportPage'
 import ContentManagementPage from '@/pages/dashboard/ContentManagementPage'
 import ProductionAccessPage from '@/pages/dashboard/ProductionAccessPage'
 import UsersPage from '@/pages/dashboard/UsersPage'
+import NotificationsPage from '@/pages/dashboard/NotificationsPage'
+import ReportsPage from '@/pages/dashboard/ReportsPage'
 import ProductionLoginPage from '@/pages/production/ProductionLoginPage'
 import ProductionQueuePage from '@/pages/production/ProductionQueuePage'
 import ProductionReadyPage from '@/pages/production/ProductionReadyPage'
@@ -67,6 +69,8 @@ export const appRoutes: { public: AppRoute[]; dashboard: AppRoute[]; production:
     { path: 'content', element: <ContentManagementPage /> },
     { path: 'production-access', element: <ProductionAccessPage /> },
     { path: 'users', element: <UsersPage /> },
+    { path: 'notifications', element: <NotificationsPage /> },
+    { path: 'reports', element: <ReportsPage /> },
   ],
   production: [
     { path: '', element: <ProductionLoginPage /> },

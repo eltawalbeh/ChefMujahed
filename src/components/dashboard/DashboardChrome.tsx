@@ -10,9 +10,13 @@ const baseItems = [
   { to: '/dashboard/content', label: 'المحتوى', icon: '✦', visible: canManageContent },
   { to: '/dashboard/production-access', label: 'وصول المطبخ', icon: '▣', visible: canManageProductionAccess },
   { to: '/dashboard/users', label: 'المستخدمون', icon: '◎', visible: canManageUsers },
+  { to: '/dashboard/notifications', label: 'التنبيهات', icon: '◌' },
+  { to: '/dashboard/reports', label: 'التقارير', icon: '▥' },
 ] as const
 
 function pageTitle(pathname: string) {
+  if (pathname.includes('/notifications')) return 'التنبيهات التشغيلية'
+  if (pathname.includes('/reports')) return 'التقارير والتحليلات'
   if (pathname.includes('/users')) return 'المستخدمون والصلاحيات'
   if (pathname.includes('/production-access')) return 'وصول شاشة الإنتاج'
   if (pathname.includes('/content')) return 'إدارة محتوى الموقع'

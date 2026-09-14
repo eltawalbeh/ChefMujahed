@@ -9,6 +9,7 @@ function statusLabel(value: string) {
   if (value === 'APPROVED') return 'معتمد'
   if (value === 'PREPARING') return 'قيد التحضير'
   if (value === 'READY') return 'جاهز'
+  if (value === 'OUT_FOR_DELIVERY') return 'خارج للتوصيل'
   if (value === 'COMPLETED') return 'مكتمل'
   return value
 }
@@ -22,7 +23,15 @@ export default function ProductionCard({
   busy?: boolean
   onAdvance?: () => void
 }) {
-  const actionLabel = request.status === 'APPROVED' ? 'بدء التحضير' : request.status === 'PREPARING' ? 'تحديد كجاهز' : null
+  const actionLabel = request.status === 'APPROVED'
+    ? 'بدء التحضير'
+    : request.status === 'PREPARING'
+      ? 'تحديد كجاهز'
+      : request.status === 'READY'
+        ? 'إرسال للتوصيل'
+        : request.status === 'OUT_FOR_DELIVERY'
+          ? 'تأكيد التسليم والإكمال'
+          : null
   return (
     <article className="rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[0_8px_30px_rgba(29,23,20,.05)] md:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--color-border)] pb-4">

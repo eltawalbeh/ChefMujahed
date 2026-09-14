@@ -34,8 +34,8 @@ export function getProductionQueue(token: string, view: ProductionView) {
 export function updateProductionStatus(
   token: string,
   requestId: string,
-  targetStatus: 'PREPARING' | 'READY',
-  expectedStatus: 'APPROVED' | 'PREPARING',
+  targetStatus: 'PREPARING' | 'READY' | 'OUT_FOR_DELIVERY' | 'COMPLETED',
+  expectedStatus: 'APPROVED' | 'PREPARING' | 'READY' | 'OUT_FOR_DELIVERY',
 ) {
   return rpc<{ id: string; status: string; updated: true }>('production_update_status', {
     p_token: token,

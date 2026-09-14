@@ -19,7 +19,7 @@ export type ProductionRequestCard = {
   fulfillmentType: FulfillmentType
   preferredDate?: string | null
   preferredTime?: string | null
-  status: Extract<RequestStatus, 'APPROVED' | 'PREPARING' | 'READY' | 'COMPLETED'>
+  status: Extract<RequestStatus, 'APPROVED' | 'PREPARING' | 'READY' | 'OUT_FOR_DELIVERY' | 'COMPLETED'>
   priority?: string | null
   assignedEmployee?: string | null
   readyAt?: string | null

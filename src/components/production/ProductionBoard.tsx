@@ -56,8 +56,14 @@ export default function ProductionBoard({ view }: { view: ProductionView }) {
   if (!session) return <Navigate to="/kitchen" replace />
 
   const advance = async (request: NonNullable<ProductionQueueResult['items']>[number]) => {
-    const target = request.status === 'APPROVED' ? 'PREPARING' : 'READY'
-    if (request.status !== 'APPROVED' && request.status !== 'PREPARING') return
+    const target = request.status === 'APPROVED'
+      ? 'PREPARING'
+      : request.status === 'PREPARING'
+        ? 'READY'
+        : request.status === 'READY'
+          ? 'OUT_FOR_DELIVERY'
+          : 'COMPLETED'
+    if (!['APPROVED', 'PREPARING', 'READY', 'OUT_FOR_DELIVERY'].includes(request.status)) return
     try {
       setBusyId(request.id); setError('')
       await updateProductionStatus(session.token, request.id, target, request.status)
@@ -77,6 +83,6 @@ export default function ProductionBoard({ view }: { view: ProductionView }) {
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4"><button onClick={() => void load()} className="min-h-11 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-sm font-bold">تحديث</button><div className="text-right"><h1 className="text-3xl font-bold md:text-4xl">{viewCopy[view].title}</h1><p className="mt-2 text-sm text-[var(--color-text-muted)]">{viewCopy[view].description}</p></div></div>
     {!isOnline ? <div className="mb-5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-center font-semibold">أنت غير متصل بالإنترنت. ستتم إعادة المحاولة عند عودة الاتصال.</div> : null}
     {error ? <div className="mb-5 rounded-2xl border border-[#E7B5B5] bg-[#FFF5F5] p-4 text-center text-sm font-semibold text-[#9B2C2C]">{error}</div> : null}
-    {loading ? <div className="grid gap-5 md:grid-cols-2"><div className="h-80 animate-pulse rounded-3xl bg-[var(--color-surface)]"/><div className="h-80 animate-pulse rounded-3xl bg-[var(--color-surface)]"/></div> : data?.items.length ? <div className="grid gap-5 xl:grid-cols-2">{data.items.map((request) => <ProductionCard key={request.id} request={request} busy={busyId===request.id} onAdvance={view==='ACTIVE' ? () => void advance(request) : undefined}/>)}</div> : <StatePanel title={view==='ACTIVE' ? 'لا توجد طلبات إنتاج نشطة' : view==='READY' ? 'لا توجد طلبات جاهزة حالياً' : 'لا توجد طلبات مكتملة اليوم'} description="ستظهر الطلبات هنا تلقائياً عندما تصل للحالة المناسبة." actionLabel="تحديث" onAction={() => void load()} />}
+    {loading ? <div className="grid gap-5 md:grid-cols-2"><div className="h-80 animate-pulse rounded-3xl bg-[var(--color-surface)]"/><div className="h-80 animate-pulse rounded-3xl bg-[var(--color-surface)]"/></div> : data?.items.length ? <div className="grid gap-5 xl:grid-cols-2">{data.items.map((request) => <ProductionCard key={request.id} request={request} busy={busyId===request.id} onAdvance={view === 'ACTIVE' || view === 'READY' ? () => void advance(request) : undefined}/>)}</div> : <StatePanel title={view==='ACTIVE' ? 'لا توجد طلبات إنتاج نشطة' : view==='READY' ? 'لا توجد طلبات جاهزة حالياً' : 'لا توجد طلبات مكتملة اليوم'} description="ستظهر الطلبات هنا تلقائياً عندما تصل للحالة المناسبة." actionLabel="تحديث" onAction={() => void load()} />}
   </ProductionShell>
 }

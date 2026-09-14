@@ -12,6 +12,8 @@ import { useDashboard } from '@/state/DashboardContext'
 import type { DashboardRequestDetail } from '@/types/dashboard'
 import { DashboardError, DashboardLoading, DashboardRestricted } from '@/components/dashboard/DashboardStates'
 import { PaymentStatusBadge, RequestStatusBadge } from '@/components/dashboard/DashboardStatusBadge'
+import InvoicePanel from '@/components/dashboard/InvoicePanel'
+import DeliveryActions from '@/components/dashboard/DeliveryActions'
 import { canLinkCustomers, canManagePricing } from '@/lib/dashboardPermissions'
 import { formatJod } from '@/lib/format'
 import Button from '@/components/ui/Button'
@@ -84,6 +86,11 @@ export default function RequestDetailsPage() {
         <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--color-text-muted)]">
           <RequestStatusBadge status={request.status} />
           <PaymentStatusBadge status={request.payment_status} />
+          <DeliveryActions
+            status={request.status}
+            busy={saving}
+            onChange={(status) => void mutate(() => updateDashboardRequestStatus(runtime, id, status))}
+          />
           <span>بواسطة: {request.source}</span>
           {request.requires_reapproval ? <span className="rounded-full bg-[#FFF3E0] px-3 py-1 text-[#E65100]">يتطلب إعادة مراجعة</span> : null}
         </div>
@@ -182,6 +189,8 @@ export default function RequestDetailsPage() {
               }}>تحديث حالة الدفع</Button>
             </div>
           </Card>
+
+          <InvoicePanel request={request} items={data.items} />
 
           <Card title="ملاحظات داخلية">
             <div className="space-y-3">

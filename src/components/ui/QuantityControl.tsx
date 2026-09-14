@@ -16,7 +16,7 @@ export default function QuantityControl({
         aria-label="تقليل الكمية"
         onClick={() => onChange(Math.max(min, value - 1))}
         disabled={value <= min}
-        className="grid w-10 place-items-center text-xl text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg)] disabled:opacity-40"
+        className="grid min-w-10 place-items-center text-xl text-[var(--color-text)] transition-colors outline-none hover:bg-[var(--color-bg)] focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset disabled:opacity-40"
       >
         −
       </button>
@@ -27,7 +27,7 @@ export default function QuantityControl({
         type="button"
         aria-label="زيادة الكمية"
         onClick={() => onChange(value + 1)}
-        className="grid w-10 place-items-center text-xl text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg)]"
+        className="grid min-w-10 place-items-center text-xl text-[var(--color-text)] transition-colors outline-none hover:bg-[var(--color-bg)] focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset"
       >
         +
       </button>

@@ -63,7 +63,7 @@ export default function ProductionBoard({ view }: { view: ProductionView }) {
         : request.status === 'READY'
           ? 'OUT_FOR_DELIVERY'
           : 'COMPLETED'
-    if (!['APPROVED', 'PREPARING', 'READY', 'OUT_FOR_DELIVERY'].includes(request.status)) return
+    if (request.status === 'COMPLETED') return
     try {
       setBusyId(request.id); setError('')
       await updateProductionStatus(session.token, request.id, target, request.status)

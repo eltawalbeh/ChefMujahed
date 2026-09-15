@@ -1,45 +1,10 @@
-import { Link } from 'react-router-dom'
+import { useEffect,useMemo,useState } from 'react'
+import { Link,useLocation } from 'react-router-dom'
+import { List,MagnifyingGlass,X } from '@phosphor-icons/react'
 import BrandLogo from '@/components/public/BrandLogo'
 import BagIcon from '@/components/ui/BagIcon'
-import SearchIcon from '@/components/ui/SearchIcon'
 import IconButton from '@/components/ui/IconButton'
+import { getB2BProducts } from '@/data/catalog'
+import type { Product } from '@/types/product'
 import { useB2BRequestDraft } from '@/state/B2BRequestDraftContext'
-
-function navClass(active: boolean) {
-  return active
-    ? 'relative text-sm font-bold text-[var(--color-text)]'
-    : 'relative text-sm font-medium text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text)]'
-}
-
-function ActiveUnderline({ active }: { active: boolean }) {
-  return active ? <span aria-hidden="true" className="absolute -bottom-2 left-1/2 h-0.5 w-5 -translate-x-1/2 rounded-full bg-[var(--color-accent)]" /> : null
-}
-
-export default function B2BHeader({ onSearch }: { onSearch?: () => void }) {
-  const { itemCount, openRequest } = useB2BRequestDraft()
-
-  const nav = (
-    <>
-      <Link to="/" className={navClass(false)}>الرئيسية</Link>
-      <Link to="/products" className={navClass(false)}>قائمتنا</Link>
-      <Link to="/business" className={navClass(true)}>للشركات<ActiveUnderline active /></Link>
-    </>
-  )
-
-  return (
-    <header className="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[color:var(--color-surface)]/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-4 md:h-20 md:px-16">
-        <BrandLogo compact className="md:hidden" />
-        <BrandLogo className="hidden md:inline-flex" />
-        <nav className="hidden items-center gap-8 md:flex" aria-label="التنقل الرئيسي">{nav}</nav>
-        <div className="flex items-center gap-1.5">
-          <IconButton label="البحث" onClick={onSearch}><SearchIcon /></IconButton>
-          <IconButton label="الطلب الحالي" onClick={openRequest}>
-            <span className="relative inline-flex"><BagIcon />{itemCount > 0 ? <span className="absolute -left-2 -top-2 min-w-4 rounded-full bg-[var(--color-accent)] px-1 text-center text-[10px] font-bold leading-4 text-white">{itemCount}</span> : null}</span>
-          </IconButton>
-        </div>
-      </div>
-      <nav className="flex h-11 items-center justify-center gap-7 border-t border-[var(--color-border)] px-4 md:hidden" aria-label="التنقل الرئيسي للجوال">{nav}</nav>
-    </header>
-  )
-}
+export default function B2BHeader(){const {itemCount,openRequest}=useB2BRequestDraft();const location=useLocation();const [open,setOpen]=useState(false);const [menu,setMenu]=useState(false);const [query,setQuery]=useState('');const [products,setProducts]=useState<Product[]>([]);useEffect(()=>{if(open&&!products.length)void getB2BProducts().then(setProducts).catch(()=>undefined)},[open,products.length]);const results=useMemo(()=>{const value=query.trim().toLowerCase();return value?products.filter(product=>(product.name+' '+(product.shortDescription||'')).toLowerCase().includes(value)).slice(0,6):[]},[products,query]);const nav=<><Link to="/">الرئيسية</Link><Link to="/products">قائمتنا</Link><Link to="/business" className={location.pathname.startsWith('/business')?'font-bold':'text-[var(--color-text-muted)]'}>للشركات</Link></>;const input=<div className="relative w-full max-w-xl"><input autoFocus value={query} onChange={event=>setQuery(event.target.value)} placeholder="ابحث في منتجات الشركات..." className="h-11 w-full rounded-xl border border-[var(--color-border)] bg-white px-4 text-right outline-none focus:border-[var(--color-accent)]"/>{results.length?<div className="absolute top-[calc(100%+8px)] z-50 w-full overflow-hidden rounded-xl border border-[var(--color-border)] bg-white shadow-xl">{results.map(product=><Link key={product.id} to={'/business/product/'+product.slug} onClick={()=>{setOpen(false);setQuery('')}} className="block border-b border-[var(--color-border)] px-4 py-3 text-right text-sm hover:bg-[var(--color-bg)]">{product.name}</Link>)}</div>:null}</div>;return <header className="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[color:var(--color-surface)]/95 backdrop-blur"><div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-3 px-4 md:h-20 md:px-16"><BrandLogo compact className="md:hidden"/><BrandLogo className="hidden md:inline-flex"/>{open?<div className="hidden flex-1 justify-center px-4 md:flex">{input}</div>:<nav className="hidden items-center gap-8 md:flex">{nav}</nav>}<div className="flex items-center gap-1.5"><IconButton label={open?'إغلاق البحث':'البحث'} onClick={()=>{setOpen(value=>!value);setQuery('')}}>{open?<X size={20}/>:<MagnifyingGlass size={20}/>}</IconButton><IconButton label="الطلب الحالي" onClick={openRequest}><span className="relative inline-flex"><BagIcon/>{itemCount>0?<span className="absolute -left-2 -top-2 min-w-5 animate-bounce rounded-full bg-[var(--color-accent)] px-1 text-center text-[10px] font-bold leading-5 text-white">{itemCount}</span>:null}</span></IconButton><button type="button" onClick={()=>setMenu(value=>!value)} className="grid size-10 place-items-center rounded-lg border border-[var(--color-border)] md:hidden">{menu?<X size={20}/>:<List size={20}/>}</button></div></div>{open?<div className="border-t border-[var(--color-border)] p-3 md:hidden">{input}</div>:null}{menu?<nav className="flex items-center justify-center gap-7 border-t border-[var(--color-border)] px-4 py-4 md:hidden">{nav}</nav>:null}</header>}

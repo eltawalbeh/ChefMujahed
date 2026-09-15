@@ -108,6 +108,7 @@ export function RequestDraftProvider({ children }: { children: ReactNode }) {
         { ...incoming, id: createClientId('b2c-item'), addedAt: new Date().toISOString() },
       ]
     })
+    setIsRequestOpen(true)
   }, [])
 
   const updateQuantity = useCallback((itemId: string, quantity: number) => {

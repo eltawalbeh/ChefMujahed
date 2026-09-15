@@ -114,6 +114,7 @@ const pageSchema: Record<SitePageKey, { fields: Field[]; repeaters?: Repeater[] 
   },
   footer: {
     fields: [
+      { key: 'logoUrl', label: 'لوجو الموقع', kind: 'image', imageSize: 'يفضل SVG أو PNG بخلفية شفافة', imageHelp: 'ارفع اللوجو الرسمي بخلفية شفافة. سيُستخدم تلقائياً في الـHeader والـFooter على الموبايل والديسكتوب.' },
       { key: 'description', label: 'وصف العلامة', kind: 'textarea' },
       { key: 'copyright', label: 'حقوق النشر' },
     ],

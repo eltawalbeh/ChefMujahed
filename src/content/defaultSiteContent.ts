@@ -85,6 +85,7 @@ export const defaultSiteContent: Record<SitePageKey, Record<string, any>> = {
     ],
   },
   footer: {
+    logoUrl: '',
     description: 'مطبخ متخصص في الحلويات والكيك والمعجنات الحلوة والمخبوزات، مع تجربة طلب منظمة للأفراد والشركات.',
     copyright: '© ٢٠٢٦ الشيف مجاهد. جميع الحقوق محفوظة.',
   },
@@ -169,6 +170,7 @@ export const defaultSiteContentEn: Record<SitePageKey, Record<string, any>> = {
     ],
   },
   footer: {
+    logoUrl: '',
     description: 'A specialized kitchen for desserts, cakes, sweet pastries and baked treats, with a structured request experience for individuals and businesses.',
     copyright: '© 2026 Chef Mujahed. All rights reserved.',
   },

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import PublicHeader from '@/components/public/PublicHeader'
 import PublicFooter from '@/components/public/PublicFooter'
 import ProductGrid from '@/components/public/ProductGrid'
+import HeroMediaStack from '@/components/public/HeroMediaStack'
 import CatalogSkeleton from '@/components/public/CatalogSkeleton'
 import StatePanel from '@/components/ui/StatePanel'
 import { getPublicProducts } from '@/data/catalog'
@@ -25,9 +26,7 @@ export default function B2CHomePage() {
   return <div className="min-h-screen overflow-x-hidden bg-[var(--color-bg)]"><PublicHeader /><main>
     <section className="relative overflow-hidden border-b border-[var(--color-border)] bg-[var(--color-surface)]">
       <div className="mx-auto grid min-h-[620px] max-w-[1440px] items-center gap-10 px-4 py-14 md:px-16 lg:grid-cols-[1fr_0.82fr] lg:py-20" dir="ltr">
-        <div className="relative mx-auto hidden h-[430px] w-full max-w-[500px] lg:block" aria-hidden="true">
-          {content.heroImageUrl ? <img src={content.heroImageUrl} alt="" className="h-full w-full rounded-[42px] object-cover shadow-[0_24px_70px_rgba(29,23,20,.12)]"/> : <><div className="absolute left-0 top-16 h-[300px] w-[300px] rotate-[-7deg] rounded-[42px] bg-[var(--color-bg)]"/><div className="absolute bottom-0 right-2 h-[265px] w-[250px] rotate-[6deg] rounded-[36px] border border-[var(--color-border)] bg-[#EEE1D2]"/><div className="absolute left-20 top-0 grid h-[330px] w-[300px] place-items-center rounded-[42px] border border-[var(--color-border)] bg-[var(--color-text-muted)] shadow-[0_24px_70px_rgba(29,23,20,.12)]"><div className="text-center text-[var(--color-surface)]"><span className="block text-[84px] font-bold leading-none">ش</span><span className="mt-5 block text-sm tracking-[.18em]">حلويات · كيك · معجنات</span></div></div></>}
-        </div>
+        <HeroMediaStack images={Array.isArray(content.heroImages) && content.heroImages.length ? content.heroImages : content.heroImageUrl ? [content.heroImageUrl] : []} />
         <div dir="rtl" className="mx-auto max-w-[680px] text-right lg:mx-0"><p className="text-sm font-semibold text-[var(--color-accent)]">{content.eyebrow}</p><h1 className="mt-4 text-[42px] font-bold leading-[1.25] text-[var(--color-text)] md:text-[58px]">{content.title}</h1><p className="mt-6 max-w-[600px] text-base leading-8 text-[var(--color-text-muted)] md:text-lg">{content.description}</p><div className="mt-8 flex flex-col gap-3 sm:flex-row"><Link to="/products" className="inline-flex h-12 items-center justify-center rounded-xl bg-[var(--color-interactive-primary)] px-7 font-semibold text-[var(--color-on-primary)] hover:bg-[var(--color-interactive-primary-hover)]">{content.primaryCtaLabel}</Link><Link to="/business" className="inline-flex h-12 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-7 font-semibold">{content.secondaryCtaLabel}</Link></div><p className="mt-5 text-xs leading-6 text-[var(--color-text-muted)]">تسجيل الطلب لا يعني تأكيده؛ تتم مراجعة التفاصيل والتواصل معك قبل بدء التجهيز.</p></div>
       </div>
     </section>

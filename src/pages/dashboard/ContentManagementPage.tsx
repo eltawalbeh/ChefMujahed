@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import Button from '@/components/ui/Button'
 import ImageUploadField from '@/components/dashboard/ImageUploadField'
+import HeroImageSlotsField from '@/components/dashboard/HeroImageSlotsField'
 import { DashboardError, DashboardLoading, DashboardRestricted } from '@/components/dashboard/DashboardStates'
 import { getDashboardSitePage, updateDashboardSitePage } from '@/data/dashboard'
 import { useDashboard } from '@/state/DashboardContext'
@@ -9,7 +10,7 @@ import { canManageContent } from '@/lib/dashboardPermissions'
 import type { SitePageKey } from '@/content/defaultSiteContent'
 
 type CmsLocale = 'ar' | 'en'
-type FieldKind = 'text' | 'textarea' | 'url' | 'image'
+type FieldKind = 'text' | 'textarea' | 'url' | 'image' | 'heroImages'
 type Field = {
   key: string
   label: string
@@ -39,7 +40,7 @@ const pageSchema: Record<SitePageKey, { fields: Field[]; repeaters?: Repeater[] 
       { key: 'eyebrow', label: 'النص فوق العنوان' },
       { key: 'title', label: 'عنوان الـ Hero', kind: 'textarea' },
       { key: 'description', label: 'وصف الـ Hero', kind: 'textarea' },
-      { key: 'heroImageUrl', label: 'صورة الـ Hero', kind: 'image', imageSize: '1400 × 1200 px · 7:6', imageHelp: 'صورة واضحة للمنتج أو الهوية البصرية، بدون نصوص كثيرة داخل الصورة.' },
+      { key: 'heroImages', label: 'صور الـ Hero المتحركة', kind: 'heroImages', imageSize: '1400 × 1200 px · 7:6', imageHelp: 'ارفع من صورة واحدة إلى ثلاث صور؛ الصور اختيارية بعد الصورة الأولى.' },
       { key: 'primaryCtaLabel', label: 'نص الزر الرئيسي' },
       { key: 'secondaryCtaLabel', label: 'نص زر الشركات' },
       { key: 'processEyebrow', label: 'عنوان صغير لقسم كيف يعمل الطلب' },
@@ -325,6 +326,26 @@ export default function ContentManagementPage() {
               </div>
 
               {schema.fields.map((field) => {
+                if (field.kind === 'heroImages') {
+                  return (
+                    <HeroImageSlotsField
+                      key={field.key}
+                      values={Array.isArray(contentPair.ar[field.key]) ? contentPair.ar[field.key] : contentPair.ar.heroImageUrl ? [contentPair.ar.heroImageUrl] : []}
+                      onChange={(values) => {
+                        const pair = {
+                          ar: { ...contentPair.ar, heroImages: values, heroImageUrl: values[0] ?? '' },
+                          en: { ...contentPair.en, heroImages: values, heroImageUrl: values[0] ?? '' },
+                        }
+                        contentCache.set(selected, pair)
+                        setContentPair(pair)
+                        setSaved(false)
+                      }}
+                      storagePath={`cms/${selected}/hero`}
+                      disabled={runtime.mode === 'preview'}
+                    />
+                  )
+                }
+
                 if (field.kind === 'image') {
                   return (
                     <ImageUploadField

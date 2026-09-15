@@ -6,6 +6,8 @@ import HeroImageSlotsField from '@/components/dashboard/HeroImageSlotsField'
 import { DashboardError, DashboardLoading, DashboardRestricted } from '@/components/dashboard/DashboardStates'
 import { getDashboardSitePage, updateDashboardSitePage } from '@/data/dashboard'
 import { useDashboard } from '@/state/DashboardContext'
+import { useDashboardPreferences } from '@/state/DashboardPreferencesContext'
+import { dashboardText } from '@/lib/dashboardI18n'
 import { canManageContent } from '@/lib/dashboardPermissions'
 import type { SitePageKey } from '@/content/defaultSiteContent'
 
@@ -200,15 +202,16 @@ export default function ContentManagementPage() {
   const { runtime, role } = useDashboard()
   const [searchParams, setSearchParams] = useSearchParams()
   const selected = (searchParams.get('page') as SitePageKey) || 'home'
-  const locale: CmsLocale = searchParams.get('lang') === 'en' ? 'en' : 'ar'
+  const { locale } = useDashboardPreferences()
   const [contentPair, setContentPair] = useState<PageContentPair | null>(() => contentCache.get(selected) ?? null)
   const [error, setError] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const canEdit = runtime.mode === 'preview' || canManageContent(role)
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (force = false) => {
     try {
+      if (!force) { const cached = contentCache.get(selected); if (cached) { setContentPair(cached); return } }
       setError(false)
       setSaved(false)
       const result = await getDashboardSitePage(runtime, selected)
@@ -220,19 +223,15 @@ export default function ContentManagementPage() {
     }
   }, [runtime, selected])
 
-  useEffect(() => {
-    const cached = contentCache.get(selected)
-    setContentPair(cached ?? null)
-    void load()
-  }, [load, selected])
+  useEffect(() => { void load() }, [selected])
 
   const schema = useMemo(() => pageSchema[selected], [selected])
   if (error) return <DashboardError onRetry={() => void load()} />
   if (!contentPair) return <DashboardLoading />
 
-  const content = contentPair[locale]
+  const content = contentPair.ar
   const setLocaleContent = (next: Record<string, any>) => {
-    const pair = { ...contentPair, [locale]: next }
+    const pair = { ...contentPair, ar: next }
     contentCache.set(selected, pair)
     setContentPair(pair)
     setSaved(false)
@@ -248,17 +247,9 @@ export default function ContentManagementPage() {
     setSaved(false)
   }
 
-  const setLocale = (nextLocale: CmsLocale) => {
-    const next = new URLSearchParams(searchParams)
-    next.set('page', selected)
-    next.set('lang', nextLocale)
-    setSearchParams(next)
-  }
-
   const setPage = (pageKey: SitePageKey) => {
     const next = new URLSearchParams(searchParams)
     next.set('page', pageKey)
-    next.set('lang', locale)
     setSearchParams(next)
   }
 
@@ -267,7 +258,7 @@ export default function ContentManagementPage() {
       setSaving(true)
       setSaved(false)
       const result = await updateDashboardSitePage(runtime, selected, contentPair.ar, contentPair.en)
-      const next = { ar: result.content, en: result.contentEn ?? contentPair.en }
+      const next = { ar: result.content, en: contentPair.en }
       contentCache.set(selected, next)
       setContentPair(next)
       setSaved(true)
@@ -279,10 +270,10 @@ export default function ContentManagementPage() {
   }
 
   return (
-    <main className="p-4 lg:p-8">
+    <main className="p-4 lg:p-8"><div className="sticky top-[112px] z-10 mb-6 flex items-center justify-between gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/95 p-4 shadow-sm backdrop-blur" dir={locale === "en" ? "ltr" : "rtl"}><div><h2 className="font-bold">{dashboardText(locale, "title.content")}</h2><p className="text-xs text-[var(--color-text-muted)]">{dashboardText(locale, "cms.saveHint")}</p></div><div className="flex gap-2"><Button variant="ghost" onClick={() => void load(true)}>{locale === "en" ? "Reset" : "تراجع"}</Button><Button disabled={saving} onClick={() => void save()}>{saving ? dashboardText(locale, "common.saving") : dashboardText(locale, "common.save")}</Button></div></div>
       <div className="mb-6 flex flex-col gap-2 text-right">
         <h2 className="text-2xl font-bold">إدارة محتوى الموقع</h2>
-        <p className="text-sm text-[var(--color-text-muted)]">عدّل المحتوى العربي والإنجليزي بدون الرجوع للكود. الصور مشتركة بين اللغتين.</p>
+        <p className="text-sm text-[var(--color-text-muted)]">{dashboardText(locale,'cms.websiteContent')}</p>
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[290px_minmax(0,1fr)]" dir="rtl">
@@ -383,8 +374,8 @@ export default function ContentManagementPage() {
               ))}
 
               <div className="sticky bottom-4 flex justify-end gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/95 p-3 shadow-lg backdrop-blur" dir="rtl">
-                <Button variant="ghost" onClick={() => void load()}>تراجع</Button>
-                <Button disabled={saving} onClick={() => void save()}>{saving ? 'جاري الحفظ...' : 'حفظ ونشر النسختين'}</Button>
+                <Button variant="ghost" onClick={() => void load(true)}>{locale === 'en' ? 'Reset' : 'تراجع'}</Button>
+                <Button disabled={saving} onClick={() => void save()} >{saving ? dashboardText(locale,'common.saving') : dashboardText(locale,'common.save')}</Button>
               </div>
             </div>
           )}

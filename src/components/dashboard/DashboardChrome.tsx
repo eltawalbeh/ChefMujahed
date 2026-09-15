@@ -1,96 +1,10 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { canManageContent, canManageProductionAccess, canManageUsers, roleLabel } from '@/lib/dashboardPermissions'
 import { useDashboard } from '@/state/DashboardContext'
-
-const baseItems = [
-  { to: '/dashboard', label: 'الرئيسية', icon: '⌂', end: true },
-  { to: '/dashboard/requests', label: 'الطلبات', icon: '▤' },
-  { to: '/dashboard/customers', label: 'العملاء', icon: '◉' },
-  { to: '/dashboard/products', label: 'المنتجات', icon: '◇' },
-  { to: '/dashboard/content', label: 'المحتوى', icon: '✦', visible: canManageContent },
-  { to: '/dashboard/production-access', label: 'وصول المطبخ', icon: '▣', visible: canManageProductionAccess },
-  { to: '/dashboard/users', label: 'المستخدمون', icon: '◎', visible: canManageUsers },
-  { to: '/dashboard/notifications', label: 'التنبيهات', icon: '◌' },
-  { to: '/dashboard/reports', label: 'التقارير', icon: '▥' },
-] as const
-
-function pageTitle(pathname: string) {
-  if (pathname.includes('/notifications')) return 'التنبيهات التشغيلية'
-  if (pathname.includes('/reports')) return 'التقارير والتحليلات'
-  if (pathname.includes('/users')) return 'المستخدمون والصلاحيات'
-  if (pathname.includes('/production-access')) return 'وصول شاشة الإنتاج'
-  if (pathname.includes('/content')) return 'إدارة محتوى الموقع'
-  if (pathname.includes('/products/import')) return 'استيراد منتجات Bulk'
-  if (pathname.includes('/products/new')) return 'إضافة منتج'
-  if (pathname.includes('/products/') && pathname.includes('/edit')) return 'تعديل بيانات المنتج'
-  if (pathname.includes('/products')) return 'إدارة المنتجات'
-  if (pathname.includes('/customers/')) return 'تفاصيل العميل'
-  if (pathname.includes('/customers')) return 'إدارة العملاء'
-  if (pathname.includes('/requests/')) return 'تفاصيل الطلب'
-  if (pathname.includes('/requests')) return 'إدارة الطلبات'
-  return 'لوحة التحكم'
-}
-
-function visibleItems(role: Parameters<typeof canManageUsers>[0]) {
-  return baseItems.filter((item) => !item.visible || item.visible(role))
-}
-
-export function DashboardSidebar() {
-  const { role, runtime, logout } = useDashboard()
-  const items = visibleItems(role)
-
-  return (
-    <aside dir="rtl" className="fixed inset-y-0 right-0 z-30 hidden w-[260px] flex-col border-l border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-6 lg:flex">
-      <div className="flex items-center gap-3 pb-4">
-        <div className="grid size-10 place-items-center rounded-[10px] bg-[var(--color-text-muted)] font-bold text-[var(--color-on-primary)]">ش</div>
-        <div>
-          <p className="font-bold">لوحة التحكم</p>
-          <p className="text-[11px] text-[var(--color-accent)]">الشيف مجاهد</p>
-        </div>
-      </div>
-      <div className="border-t border-[var(--color-border)] pt-5">
-        <nav className="space-y-1.5" aria-label="التنقل الداخلي">
-          {items.map((item) => (
-            <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => 'flex min-h-11 items-center gap-3 rounded-lg px-4 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ' + (isActive ? 'bg-[var(--color-bg)] font-semibold text-[var(--color-text-muted)]' : 'text-[#57534E] hover:bg-[var(--color-bg)]')}>
-              <span aria-hidden="true" className="grid size-5 place-items-center rounded text-xs opacity-70">{item.icon}</span>
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-      </div>
-      <div className="mt-auto border-t border-[var(--color-border)] pt-4">
-        <div className="flex items-center gap-3">
-          <div className="grid size-9 place-items-center rounded-full bg-[var(--color-border)] text-sm font-semibold">م</div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">{runtime.access?.displayName ?? 'مستخدم داخلي'}</p>
-            <p className="text-xs text-[var(--color-text-muted)]">{roleLabel(role)}{runtime.mode === 'preview' ? ' · معاينة' : ''}</p>
-          </div>
-        </div>
-        <button type="button" onClick={() => void logout()} className="mt-3 min-h-11 w-full rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm text-[var(--color-text-muted)] outline-none transition-colors hover:bg-[var(--color-bg)] focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2">تسجيل الخروج</button>
-      </div>
-    </aside>
-  )
-}
-
-export function DashboardTopbar() {
-  const location = useLocation()
-  const { role, logout } = useDashboard()
-  const title = pageTitle(location.pathname)
-  const items = visibleItems(role)
-
-  return (
-    <>
-      <header dir="rtl" className="sticky top-0 z-20 flex h-[68px] items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface)] px-4 lg:px-8">
-        <h1 className="text-right text-lg font-bold lg:text-[22px]">{title}</h1>
-        <button type="button" onClick={() => void logout()} className="min-h-11 rounded-lg bg-[var(--color-bg)] px-3 py-2 text-xs font-semibold text-[var(--color-text-muted)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2">خروج</button>
-      </header>
-      <nav dir="rtl" className="sticky top-[68px] z-20 flex overflow-x-auto border-b border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 lg:hidden" aria-label="التنقل الداخلي للجوال">
-        {items.map((item) => (
-          <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => 'min-h-11 shrink-0 rounded-lg px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ' + (isActive ? 'bg-[var(--color-bg)] font-semibold text-[var(--color-text-muted)]' : 'text-[var(--color-text-muted)]')}>
-            {item.label}
-          </NavLink>
-        ))}
-      </nav>
-    </>
-  )
-}
+import { useDashboardPreferences } from '@/state/DashboardPreferencesContext'
+import { dashboardText, roleText } from '@/lib/dashboardI18n'
+const baseItems=[{to:'/dashboard',key:'home',icon:'⌂',end:true},{to:'/dashboard/requests',key:'requests',icon:'▤'},{to:'/dashboard/customers',key:'customers',icon:'◉'},{to:'/dashboard/products',key:'products',icon:'◇'},{to:'/dashboard/content',key:'content',icon:'✦',visible:canManageContent},{to:'/dashboard/production-access',key:'kitchen',icon:'▣',visible:canManageProductionAccess},{to:'/dashboard/users',key:'users',icon:'◎',visible:canManageUsers},{to:'/dashboard/notifications',key:'notifications',icon:'◌'},{to:'/dashboard/reports',key:'reports',icon:'▥'},{to:'/dashboard/settings',key:'settings',icon:'⚙'}] as const
+function pageTitle(path:string,locale:'ar'|'en'){if(path.includes('/notifications'))return dashboardText(locale,'title.notifications');if(path.includes('/reports'))return dashboardText(locale,'title.reports');if(path.includes('/users'))return dashboardText(locale,'title.users');if(path.includes('/content'))return dashboardText(locale,'title.content');if(path.includes('/products'))return dashboardText(locale,'title.products');if(path.includes('/customers'))return dashboardText(locale,'title.customers');if(path.includes('/requests'))return dashboardText(locale,'title.requests');if(path.includes('/settings'))return dashboardText(locale,'title.settings');return dashboardText(locale,'title.dashboard')}
+function visibleItems(role:Parameters<typeof canManageUsers>[0]){return baseItems.filter(item=>!item.visible||item.visible(role))}
+export function DashboardSidebar(){const {role,runtime,logout}=useDashboard();const {locale}=useDashboardPreferences();const items=visibleItems(role);return <aside className="fixed inset-y-0 right-0 z-30 hidden w-[260px] flex-col border-l border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-6 lg:flex"><div className="flex items-center gap-3 pb-4"><div className="grid size-10 place-items-center rounded-[10px] bg-[var(--color-text-muted)] font-bold text-[var(--color-on-primary)]">ش</div><div><p className="font-bold">{dashboardText(locale,'brand.dashboard')}</p><p className="text-[11px] text-[var(--color-accent)]">{dashboardText(locale,'brand.name')}</p></div></div><div className="border-t border-[var(--color-border)] pt-5"><nav className="space-y-1.5" aria-label={dashboardText(locale,'brand.dashboard')}>{items.map(item=><NavLink key={item.to} to={item.to} end={item.end} className={({isActive})=>'flex min-h-11 items-center gap-3 rounded-lg px-4 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] '+(isActive?'bg-[var(--color-bg)] font-semibold text-[var(--color-text-muted)]':'text-[#57534E] hover:bg-[var(--color-bg)]')}><span aria-hidden="true">{item.icon}</span>{dashboardText(locale,'nav.'+item.key)}</NavLink>)}</nav></div><div className="mt-auto border-t border-[var(--color-border)] pt-4"><div className="flex items-center gap-3"><div className="grid size-9 place-items-center rounded-full bg-[var(--color-border)] text-sm font-semibold">م</div><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{runtime.access?.displayName??(locale==='en'?'Internal user':'مستخدم داخلي')}</p><p className="text-xs text-[var(--color-text-muted)]">{roleText(locale,role)}</p></div></div><button type="button" onClick={()=>void logout()} className="mt-3 min-h-11 w-full rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm text-[var(--color-text-muted)]">{dashboardText(locale,'common.logout')}</button></div></aside>}
+export function DashboardTopbar(){const location=useLocation();const {role,logout}=useDashboard();const {locale}=useDashboardPreferences();const items=visibleItems(role);return <><header className="sticky top-0 z-20 flex h-[68px] items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface)] px-4 lg:px-8"><h1 className="text-lg font-bold lg:text-[22px]">{pageTitle(location.pathname,locale)}</h1><button type="button" onClick={()=>void logout()} className="min-h-11 rounded-lg bg-[var(--color-bg)] px-3 py-2 text-xs font-semibold lg:hidden">{dashboardText(locale,'common.logout')}</button></header><nav className="sticky top-[68px] z-20 flex overflow-x-auto border-b border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 lg:hidden" aria-label={dashboardText(locale,'brand.dashboard')}>{items.map(item=><NavLink key={item.to} to={item.to} end={item.end} className={({isActive})=>'min-h-11 shrink-0 rounded-lg px-3 py-2 text-sm '+(isActive?'bg-[var(--color-bg)] font-semibold':'text-[var(--color-text-muted)]')}>{dashboardText(locale,'nav.'+item.key)}</NavLink>)}</nav></>}

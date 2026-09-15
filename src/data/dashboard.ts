@@ -476,3 +476,9 @@ export async function createDashboardManualRequest(runtime: DashboardRuntime, pa
 export type DashboardBrandSettings = { logoUrl: string | null; updatedAt?: string }
 export async function getDashboardBrandSettings(runtime: DashboardRuntime) { if (runtime.mode === 'preview') return { logoUrl: null } satisfies DashboardBrandSettings; return secureRpc<DashboardBrandSettings>('dashboard_get_brand_settings') }
 export async function updateDashboardBrandSettings(runtime: DashboardRuntime, logoUrl: string) { if (runtime.mode === 'preview') return { logoUrl } satisfies DashboardBrandSettings; return secureRpc<DashboardBrandSettings>('dashboard_update_brand_settings', { p_logo_url: logoUrl }) }
+
+
+export async function markDashboardRequestPersonal(runtime: DashboardRuntime, id: string) {
+  if (runtime.mode === 'preview') throw new Error('لا يمكن إعادة تصنيف الطلب في وضع المعاينة.')
+  return secureRpc<DashboardRequestDetail>('dashboard_mark_request_personal', { p_request_id: id })
+}

@@ -1,4 +1,5 @@
 import { formatJod } from '@/lib/format'
+import BrandLogo from '@/components/public/BrandLogo'
 import { calculateInvoiceTotals, invoiceNumberForRequest, invoiceTaxRate } from '@/domain/invoice'
 
 type InvoicePanelProps = {
@@ -37,14 +38,14 @@ export default function InvoicePanel({ request, items }: InvoicePanelProps) {
   const issuedAt = request.invoice_issued_at || request.issued_at
 
   return (
-    <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 lg:p-6 print:rounded-none print:border-0 print:p-0">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+    <section id="invoice-print" className="invoice-print rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 lg:p-6">
+      <div className="mb-5 hidden items-start justify-between gap-4 border-b border-[var(--color-border)] pb-5 print:flex"><div><BrandLogo/><p className="mt-2 text-xs text-[var(--color-text-muted)]">فاتورة مبيعات</p></div><div className="text-left text-xs text-[var(--color-text-muted)]">الأردن · JOD</div></div><div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="font-bold">الفاتورة</h2>
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">رقم الفاتورة: {invoiceNumberForRequest(request)}</p>
           {issuedAt ? <p className="mt-1 text-xs text-[var(--color-text-muted)]">تاريخ الإصدار: {new Date(String(issuedAt)).toLocaleDateString('ar-JO')}</p> : null}
         </div>
-        <button type="button" onClick={() => window.print()} className="min-h-11 rounded-lg border border-[var(--color-border)] px-3 text-sm font-semibold outline-none transition-colors hover:bg-[var(--color-bg)] focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 print:hidden">طباعة / PDF</button>
+        <button type="button" onClick={() => window.print()} className="min-h-11 rounded-lg border border-[var(--color-border)] px-3 text-sm font-semibold outline-none transition-colors hover:bg-[var(--color-bg)] focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 print:hidden">طباعة الفاتورة / PDF</button>
       </div>
 
       <div className="mt-4 space-y-3 border-t border-[var(--color-border)] pt-4 text-sm">

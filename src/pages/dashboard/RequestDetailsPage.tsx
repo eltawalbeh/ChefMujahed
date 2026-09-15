@@ -7,17 +7,20 @@ import {
   updateDashboardItemDiscount,
   updateDashboardPayment,
   updateDashboardRequestStatus,
+  markDashboardRequestPersonal,
 } from '@/data/dashboard'
 import { useDashboard } from '@/state/DashboardContext'
 import type { DashboardRequestDetail } from '@/types/dashboard'
 import { DashboardError, DashboardLoading, DashboardRestricted } from '@/components/dashboard/DashboardStates'
 import { PaymentStatusBadge, RequestStatusBadge } from '@/components/dashboard/DashboardStatusBadge'
 import InvoicePanel from '@/components/dashboard/InvoicePanel'
+import PaymentWorkflowPanel from '@/components/dashboard/PaymentWorkflowPanel'
+import DashboardSelect from '@/components/dashboard/DashboardSelect'
 import DeliveryActions from '@/components/dashboard/DeliveryActions'
 import { canLinkCustomers, canManagePricing } from '@/lib/dashboardPermissions'
 import { formatJod } from '@/lib/format'
 import Button from '@/components/ui/Button'
-import { PAYMENT_METHOD_LABELS, PAYMENT_METHODS, PAYMENT_STATUS_LABELS, PAYMENT_STATUSES, REQUEST_STATUS_LABELS, REQUEST_STATUSES } from '@/domain/constants'
+import { REQUEST_STATUS_LABELS, REQUEST_STATUSES } from '@/domain/constants'
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 lg:p-6"><h2 className="font-bold">{title}</h2><div className="mt-4 border-t border-[var(--color-border)] pt-4">{children}</div></section>
@@ -68,14 +71,7 @@ export default function RequestDetailsPage() {
     <main className="space-y-6 p-4 lg:p-8">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex flex-wrap gap-2">
-          <select
-            value={request.status}
-            disabled={saving}
-            onChange={(e) => void mutate(() => updateDashboardRequestStatus(runtime, id, e.target.value))}
-            className="h-10 rounded-lg bg-[var(--color-text)] px-3 text-sm text-[var(--color-on-primary)]"
-          >
-            {REQUEST_STATUSES.map((status) => <option key={status} value={status}>{REQUEST_STATUS_LABELS[status]}</option>)}
-          </select>
+          <DashboardSelect value={request.status} disabled={saving} className="min-w-[220px]" onChange={(e) => void mutate(() => updateDashboardRequestStatus(runtime, id, e.target.value))}>{REQUEST_STATUSES.map((status) => <option key={status} value={status}>{REQUEST_STATUS_LABELS[status]}</option>)}</DashboardSelect>
           <Button variant="secondary" disabled>تعديل الطلب</Button>
           <Button variant="ghost" onClick={() => void mutate(() => updateDashboardRequestStatus(runtime, id, 'CANCELLED'))}>إلغاء الطلب</Button>
         </div>
@@ -119,6 +115,7 @@ export default function RequestDetailsPage() {
                 ))}
               </div>
             ) : null}
+            {b2b && request.source === 'WEBSITE' ? <div className="mt-5 border-t border-[var(--color-border)] pt-4"><Button size="sm" variant="ghost" disabled={saving} onClick={() => void mutate(() => markDashboardRequestPersonal(runtime, id))}>هذا الطلب شخصي وليس للشركة</Button><p className="mt-2 text-xs text-[var(--color-text-muted)]">استخدمه فقط إذا تبيّن أن الرقم يعود لموظف يطلب لنفسه.</p></div> : null}
           </Card>
 
           <Card title="المنتجات المطلوبة">
@@ -173,20 +170,8 @@ export default function RequestDetailsPage() {
             <div className="space-y-4 text-sm">
               <div className="flex items-center justify-between"><PaymentStatusBadge status={request.payment_status} /><span className="text-[var(--color-text-muted)]">حالة الدفع</span></div>
               <div className="flex items-center justify-between"><strong>{request.payment_method || '--'}</strong><span className="text-[var(--color-text-muted)]">طريقة الدفع</span></div>
-              <div className="border-t border-[var(--color-border)] pt-4 flex items-center justify-between"><strong className="text-xl text-[var(--color-text-muted)]">{formatJod(total)}</strong><span>المبلغ الإجمالي</span></div>
-              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
-                <select id="payment-status" defaultValue={request.payment_status} className="h-10 rounded-lg border border-[var(--color-border)] bg-white px-3">
-                  {PAYMENT_STATUSES.map((status) => <option key={status} value={status}>{PAYMENT_STATUS_LABELS[status]}</option>)}
-                </select>
-                <select id="payment-method" defaultValue={request.payment_method || ''} className="h-10 rounded-lg border border-[var(--color-border)] bg-white px-3">
-                  <option value="">بدون طريقة</option>{PAYMENT_METHODS.map((method) => <option key={method} value={method}>{PAYMENT_METHOD_LABELS[method]}</option>)}
-                </select>
-              </div>
-              <Button className="w-full" onClick={() => {
-                const status = (document.getElementById('payment-status') as HTMLSelectElement)?.value
-                const method = (document.getElementById('payment-method') as HTMLSelectElement)?.value || null
-                void mutate(() => updateDashboardPayment(runtime, id, status, method))
-              }}>تحديث حالة الدفع</Button>
+              <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-4"><strong className="text-xl text-[var(--color-text-muted)]">{formatJod(total)}</strong><span>المبلغ الإجمالي</span></div>
+              <PaymentWorkflowPanel request={request} busy={saving} onSave={async (status, method) => { await mutate(() => updateDashboardPayment(runtime, id, status, method)) }} />
             </div>
           </Card>
 

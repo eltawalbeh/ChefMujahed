@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { House, ClipboardText, UsersThree, Package, Globe, Factory, Bell, ChartBar, CaretLeft } from '@phosphor-icons/react'
+import { Bell, CaretLeft, ChartBar, ClipboardText, CookingPot, Cube, Factory, Globe, House, ImageSquare, Package, UsersThree } from '@phosphor-icons/react'
+import DashboardBrand from './DashboardBrand'
 import { canManageContent, canManageProductionAccess } from '@/lib/dashboardPermissions'
 import { useDashboard } from '@/state/DashboardContext'
 import { useDashboardPreferences } from '@/state/DashboardPreferencesContext'

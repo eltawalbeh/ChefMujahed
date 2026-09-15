@@ -35,6 +35,10 @@ const pages: Array<{ key: SitePageKey; label: string; description: string }> = [
 ]
 
 const contentCache = new Map<SitePageKey, PageContentPair>()
+const DRAFT_PREFIX = 'chef-mujahed:cms-draft:'
+function readDraft(page: SitePageKey): PageContentPair | null { try { const raw = window.sessionStorage.getItem(DRAFT_PREFIX + page); return raw ? JSON.parse(raw) : null } catch { return null } }
+function writeDraft(page: SitePageKey, value: PageContentPair) { try { window.sessionStorage.setItem(DRAFT_PREFIX + page, JSON.stringify(value)) } catch {} }
+function clearDraft(page: SitePageKey) { try { window.sessionStorage.removeItem(DRAFT_PREFIX + page) } catch {} }
 
 const pageSchema: Record<SitePageKey, { fields: Field[]; repeaters?: Repeater[] }> = {
   home: {
@@ -203,7 +207,7 @@ export default function ContentManagementPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const selected = (searchParams.get('page') as SitePageKey) || 'home'
   const { locale } = useDashboardPreferences()
-  const [contentPair, setContentPair] = useState<PageContentPair | null>(() => contentCache.get(selected) ?? null)
+  const [contentPair, setContentPair] = useState<PageContentPair | null>(() => contentCache.get(selected) ?? readDraft(selected) ?? null)
   const [error, setError] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -211,7 +215,7 @@ export default function ContentManagementPage() {
 
   const load = useCallback(async (force = false) => {
     try {
-      if (!force) { const cached = contentCache.get(selected); if (cached) { setContentPair(cached); return } }
+      if (!force) { const cached = contentCache.get(selected) ?? readDraft(selected); if (cached) { contentCache.set(selected, cached); setContentPair(cached); return } }
       setError(false)
       setSaved(false)
       const result = await getDashboardSitePage(runtime, selected)
@@ -233,6 +237,7 @@ export default function ContentManagementPage() {
   const setLocaleContent = (next: Record<string, any>) => {
     const pair = { ...contentPair, ar: next }
     contentCache.set(selected, pair)
+    writeDraft(selected, pair)
     setContentPair(pair)
     setSaved(false)
   }
@@ -243,6 +248,7 @@ export default function ContentManagementPage() {
       en: { ...contentPair.en, [key]: value },
     }
     contentCache.set(selected, pair)
+    writeDraft(selected, pair)
     setContentPair(pair)
     setSaved(false)
   }
@@ -260,6 +266,7 @@ export default function ContentManagementPage() {
       const result = await updateDashboardSitePage(runtime, selected, contentPair.ar, contentPair.en)
       const next = { ar: result.content, en: contentPair.en }
       contentCache.set(selected, next)
+      clearDraft(selected)
       setContentPair(next)
       setSaved(true)
     } catch {

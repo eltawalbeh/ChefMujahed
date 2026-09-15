@@ -270,12 +270,7 @@ export default function ContentManagementPage() {
   }
 
   return (
-    <main className="p-4 lg:p-8"><div className="sticky top-[112px] z-10 mb-6 flex items-center justify-between gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/95 p-4 shadow-sm backdrop-blur" dir={locale === "en" ? "ltr" : "rtl"}><div><h2 className="font-bold">{dashboardText(locale, "title.content")}</h2><p className="text-xs text-[var(--color-text-muted)]">{dashboardText(locale, "cms.saveHint")}</p></div><div className="flex gap-2"><Button variant="ghost" onClick={() => void load(true)}>{locale === "en" ? "Reset" : "تراجع"}</Button><Button disabled={saving} onClick={() => void save()}>{saving ? dashboardText(locale, "common.saving") : dashboardText(locale, "common.save")}</Button></div></div>
-      <div className="mb-6 flex flex-col gap-2 text-right">
-        <h2 className="text-2xl font-bold">إدارة محتوى الموقع</h2>
-        <p className="text-sm text-[var(--color-text-muted)]">{dashboardText(locale,'cms.websiteContent')}</p>
-      </div>
-
+    <main className="p-4 lg:p-8"><div className="sticky top-[112px] z-10 mb-6 flex items-center justify-between gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/95 p-4 shadow-sm backdrop-blur" dir={locale === "en" ? "ltr" : "rtl"}><div><p className="font-semibold">تغييرات محتوى الموقع</p><p className="text-xs text-[var(--color-text-muted)]">الحفظ متاح دائماً من هذا الشريط.</p></div><div className="flex gap-2"><Button variant="ghost" onClick={() => void load(true)}>{locale === "en" ? "Reset" : "تراجع"}</Button><Button disabled={saving} onClick={() => void save()}>{saving ? dashboardText(locale, "common.saving") : dashboardText(locale, "common.save")}</Button></div></div>
       <div className="grid gap-5 xl:grid-cols-[290px_minmax(0,1fr)]" dir="rtl">
         <aside dir="rtl" className="h-fit rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
           <p className="px-3 py-2 text-xs font-semibold text-[var(--color-text-muted)]">صفحات الموقع</p>
@@ -296,18 +291,6 @@ export default function ContentManagementPage() {
           <div className="mb-5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4 text-xs leading-6 text-[var(--color-text-muted)]">
             <strong className="text-[var(--color-text)]">دليل الصور:</strong>{' '}
             Hero الرئيسية <bdi dir="ltr">1400 × 1200</bdi> · بطاقة الشركات <bdi dir="ltr">1200 × 800</bdi> · بطاقة عن الشيف <bdi dir="ltr">1200 × 800</bdi> · Hero الشركات <bdi dir="ltr">1400 × 1000</bdi> · صورة من نحن <bdi dir="ltr">1200 × 900</bdi> · صور المنتجات <bdi dir="ltr">1200 × 1200</bdi>. يفضل JPG أو WebP مضغوط.
-          </div>
-
-          <div className="mb-5 flex flex-col gap-4 border-b border-[var(--color-border)] pb-5 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h3 className="text-lg font-bold">{pages.find((page) => page.key === selected)?.label}</h3>
-              <p className="mt-1 text-xs text-[var(--color-text-muted)]">الحفظ ينشر العربي والإنجليزي معاً. بدّل اللغة للتأكد من النسختين قبل الحفظ.</p>
-            </div>
-            <div className="flex items-center gap-2 self-start lg:self-auto" dir="ltr">
-              <button type="button" onClick={() => setLocale('ar')} className={`rounded-xl px-4 py-2 text-sm font-semibold ${locale === 'ar' ? 'bg-[var(--color-text)] text-white' : 'border border-[var(--color-border)] bg-white'}`}>العربية</button>
-              <button type="button" onClick={() => setLocale('en')} className={`rounded-xl px-4 py-2 text-sm font-semibold ${locale === 'en' ? 'bg-[var(--color-text)] text-white' : 'border border-[var(--color-border)] bg-white'}`}>English</button>
-              {saved ? <span className="ml-2 rounded-full bg-[#E8F5E9] px-3 py-1 text-xs font-semibold text-[#2E7D32]">تم الحفظ</span> : null}
-            </div>
           </div>
 
           {!canEdit ? <DashboardRestricted /> : (
@@ -373,11 +356,7 @@ export default function ContentManagementPage() {
                 />
               ))}
 
-              <div className="sticky bottom-4 flex justify-end gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/95 p-3 shadow-lg backdrop-blur" dir="rtl">
-                <Button variant="ghost" onClick={() => void load(true)}>{locale === 'en' ? 'Reset' : 'تراجع'}</Button>
-                <Button disabled={saving} onClick={() => void save()} >{saving ? dashboardText(locale,'common.saving') : dashboardText(locale,'common.save')}</Button>
               </div>
-            </div>
           )}
         </section>
       </div>

@@ -8,6 +8,7 @@ import { DashboardTable, DashboardTd, DashboardTr } from '@/components/dashboard
 import { PaymentStatusBadge, RequestStatusBadge } from '@/components/dashboard/DashboardStatusBadge'
 import Button from '@/components/ui/Button'
 import { REQUEST_SOURCE_LABELS, REQUEST_SOURCES, REQUEST_STATUS_LABELS, REQUEST_STATUSES } from '@/domain/constants'
+import ManualRequestDialog from '@/components/dashboard/ManualRequestDialog'
 
 export default function RequestsPage() {
   const { runtime } = useDashboard()
@@ -17,6 +18,7 @@ export default function RequestsPage() {
   const [source, setSource] = useState('')
   const [type, setType] = useState('')
   const [error, setError] = useState(false)
+  const [manualOpen, setManualOpen] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -32,10 +34,7 @@ export default function RequestsPage() {
 
   return (
     <main className="space-y-5 p-4 lg:p-8">
-      <div>
-        <h2 className="text-xl font-bold">قائمة الطلبات</h2>
-        <p className="mt-1 text-sm text-[var(--color-text-muted)]">عرض، تصفية وتحديث جميع الطلبات الواردة لجميع قنوات الطلب</p>
-      </div>
+      <div className="flex flex-wrap items-end justify-between gap-3"><Button onClick={() => setManualOpen(true)}>إضافة طلب داخلي</Button><div className="text-right"><h2 className="text-xl font-bold">قائمة الطلبات</h2><p className="mt-1 text-sm text-[var(--color-text-muted)]">عرض، تصفية وتحديث جميع الطلبات الواردة لجميع قنوات الطلب</p></div></div>
 
       <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
@@ -82,6 +81,7 @@ export default function RequestsPage() {
           ))}
         </DashboardTable>
       )}
+    {manualOpen ? <ManualRequestDialog onClose={() => setManualOpen(false)} onCreated={() => void load()} /> : null}
     </main>
   )
 }

@@ -460,3 +460,14 @@ export async function revokeDashboardProductionPin(
     p_pin_id: pinId,
   })
 }
+
+
+export async function saveDashboardCustomer(runtime: DashboardRuntime, payload: Record<string, unknown>) {
+  if (runtime.mode === 'preview') throw new Error('لا يمكن حفظ العميل في وضع المعاينة.')
+  return secureRpc<DashboardCustomerDetail>('dashboard_save_customer', { payload })
+}
+
+export async function createDashboardManualRequest(runtime: DashboardRuntime, payload: Record<string, unknown>) {
+  if (runtime.mode === 'preview') throw new Error('لا يمكن إنشاء طلب في وضع المعاينة.')
+  return secureRpc<DashboardRequestDetail>('dashboard_create_manual_request', { payload })
+}

@@ -35,15 +35,7 @@ export default function BrandLogo({
       >
         الشيف مجاهد
       </span>
-      <span
-        className={cn(
-          'inline-flex items-center justify-center bg-[var(--color-text-muted)] font-bold text-[var(--color-bg)]',
-          compact ? 'size-8 rounded-lg text-sm' : 'size-10 rounded-xl text-lg',
-        )}
-        aria-hidden="true"
-      >
-        ش
-      </span>
+      <span aria-hidden="true" className="sr-only">شعار الشيف مجاهد</span>
     </div>
   )
 }

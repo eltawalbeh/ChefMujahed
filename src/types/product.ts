@@ -1,6 +1,6 @@
 export type ProductChannel = 'B2C' | 'B2B' | 'BOTH'
 export type ProductStatus = 'DRAFT' | 'ACTIVE' | 'INACTIVE' | 'ARCHIVED'
-export type ProductAvailability = 'AVAILABLE' | 'UNAVAILABLE' | 'SEASONAL'
+export type ProductAvailability = 'AVAILABLE' | 'UNAVAILABLE' | 'SEASONAL' | 'LIMITED'
 
 export type ProductUnit = {
   id: string

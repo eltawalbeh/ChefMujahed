@@ -10,6 +10,7 @@ import {
 import {
   b2cObservedSubtotal,
   createClientId,
+  isUuid,
   requestItemCount,
   sameRequestItemConfiguration,
   type AddRequestItemInput,
@@ -76,8 +77,8 @@ function readStoredDraft(): StoredDraft {
 export function RequestDraftProvider({ children }: { children: ReactNode }) {
   const initial = useMemo(() => readStoredDraft(), [])
   const [items, setItems] = useState<RequestItem[]>(initial.items ?? [])
-  const [clientSubmissionId, setClientSubmissionId] = useState(
-    initial.clientSubmissionId ?? createClientId('b2c'),
+  const [clientSubmissionId, setClientSubmissionId] = useState(() =>
+    isUuid(initial.clientSubmissionId) ? initial.clientSubmissionId : createClientId(),
   )
   const [customer, setCustomer] = useState<B2CCustomerDraft>(initial.customer ?? defaultCustomer)
   const [fulfillment, setFulfillment] = useState<FulfillmentDraft>(initial.fulfillment ?? defaultFulfillment)
@@ -105,7 +106,7 @@ export function RequestDraftProvider({ children }: { children: ReactNode }) {
       }
       return [
         ...current,
-        { ...incoming, id: createClientId('b2c-item'), addedAt: new Date().toISOString() },
+        { ...incoming, id: createClientId(), addedAt: new Date().toISOString() },
       ]
     })
     setIsRequestOpen(true)
@@ -123,7 +124,7 @@ export function RequestDraftProvider({ children }: { children: ReactNode }) {
 
   const clearRequest = useCallback(() => {
     setItems([])
-    setClientSubmissionId(createClientId('b2c'))
+    setClientSubmissionId(createClientId())
     setCustomer(defaultCustomer)
     setFulfillment(defaultFulfillment)
     setGeneralNotes('')

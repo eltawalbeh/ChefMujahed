@@ -9,11 +9,23 @@ import type {
 
 export type AddRequestItemInput = Omit<RequestItem, 'id' | 'addedAt'>
 
-export function createClientId(prefix = 'draft') {
+export function isUuid(value: unknown): value is string {
+  return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+}
+
+function fallbackUuid() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
+    const random = Math.floor(Math.random() * 16)
+    const value = character === 'x' ? random : (random & 0x3) | 0x8
+    return value.toString(16)
+  })
+}
+
+export function createClientId() {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
     return crypto.randomUUID()
   }
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`
+  return fallbackUuid()
 }
 
 function stableObject(value: unknown): unknown {
@@ -124,10 +136,15 @@ export function buildCanonicalB2BDraft(input: {
 export function validateCanonicalDraft(
   draft: CanonicalB2CRequestDraft | CanonicalB2BRequestDraft,
 ) {
-  if (!draft.clientSubmissionId) throw new Error('Missing client submission ID')
+  if (!isUuid(draft.clientSubmissionId)) {
+    throw new Error('Invalid client submission ID')
+  }
   if (!draft.items.length) throw new Error('Request must contain at least one item')
   if (draft.items.some((item) => item.quantity < 1)) {
     throw new Error('Request item quantity must be at least 1')
+  }
+  if (!draft.fulfillment.preferredDate) {
+    throw new Error('Preferred date is required')
   }
   if (draft.fulfillment.type === 'DELIVERY' && !draft.fulfillment.address) {
     throw new Error('Delivery address is required')

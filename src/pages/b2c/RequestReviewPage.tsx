@@ -7,6 +7,17 @@ import { formatJod } from '@/lib/format'
 import { submitB2CRequest } from '@/data/requests'
 import { useRequestDraft } from '@/state/RequestDraftContext'
 
+function submissionFailureMessage(error: unknown) {
+  const message = error instanceof Error ? error.message.toLowerCase() : ''
+
+  if (message.includes('preferred date')) return 'يرجى اختيار التاريخ المفضل قبل تقديم الطلب.'
+  if (message.includes('delivery address')) return 'يرجى إدخال عنوان التوصيل قبل تقديم الطلب.'
+  if (message.includes('client submission') || message.includes('uuid')) return 'انتهت صلاحية جلسة الطلب. أعد فتح المراجعة ثم حاول مرة أخرى.'
+  if (message.includes('product') || message.includes('unit')) return 'أحد المنتجات أو وحداته تغيّر أو لم يعد متاحًا. عد إلى الطلب وحدّث المنتجات ثم أعد المحاولة.'
+
+  return 'تعذر تسجيل الطلب حالياً. بياناتك محفوظة ويمكنك إعادة المحاولة بأمان.'
+}
+
 function EditIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -71,7 +82,8 @@ export default function RequestReviewPage() {
     openRequest,
   } = useRequestDraft()
 
-  const [submitState, setSubmitState] = useState<'idle' | 'submitting' | 'error' | 'offline'>('idle')
+  const [submitState, setSubmitState] = useState<'idle' | 'submitting' | 'error' | 'offline' | 'validation'>('idle')
+  const [submitMessage, setSubmitMessage] = useState('')
   const submitting = submitState === 'submitting'
 
   if (!items.length && !submitting) return <Navigate to="/" replace />
@@ -83,6 +95,12 @@ export default function RequestReviewPage() {
 
   const handleSubmit = async () => {
     if (submitting) return
+
+    if (!fulfillment.preferredDate) {
+      setSubmitMessage('يرجى اختيار التاريخ المفضل قبل تقديم الطلب.')
+      setSubmitState('validation')
+      return
+    }
 
     if (!navigator.onLine) {
       setSubmitState('offline')
@@ -121,7 +139,8 @@ export default function RequestReviewPage() {
         state: handoff,
       })
       clearRequest()
-    } catch {
+    } catch (error) {
+      setSubmitMessage(submissionFailureMessage(error))
       setSubmitState(navigator.onLine ? 'error' : 'offline')
     }
   }
@@ -138,20 +157,25 @@ export default function RequestReviewPage() {
     )
   }
 
-  if (submitState === 'error' || submitState === 'offline') {
+  if (submitState === 'error' || submitState === 'offline' || submitState === 'validation') {
+    const needsDetails = submitState === 'validation'
     return (
       <main className="grid min-h-screen place-items-center bg-[var(--color-bg)] px-6 text-center">
         <div className="w-full max-w-sm">
           <div className="mx-auto grid size-20 place-items-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] text-4xl text-[var(--color-text-muted)]">×</div>
           <h1 className="mt-7 text-2xl font-bold text-[var(--color-text)]">
-            {submitState === 'offline' ? 'لا يوجد اتصال بالإنترنت' : 'لم يتم تسجيل الطلب'}
+            {submitState === 'offline' ? 'لا يوجد اتصال بالإنترنت' : needsDetails ? 'أكمل بيانات الطلب' : 'لم يتم تسجيل الطلب'}
           </h1>
           <p className="mt-3 leading-7 text-[var(--color-text-muted)]">
             {submitState === 'offline'
               ? 'بيانات طلبك ما زالت محفوظة. أعد الاتصال بالإنترنت ثم حاول مرة أخرى.'
-              : 'حدث خطأ غير متوقع أثناء تسجيل طلبك. بياناتك محفوظة بالكامل ويمكنك إعادة المحاولة بأمان.'}
+              : submitMessage}
           </p>
-          <Button size="lg" className="mt-7 w-full" onClick={handleSubmit}>إعادة المحاولة</Button>
+          {needsDetails ? (
+            <Button size="lg" className="mt-7 w-full" onClick={() => navigate('/request/details')}>إكمال البيانات</Button>
+          ) : (
+            <Button size="lg" className="mt-7 w-full" onClick={handleSubmit}>إعادة المحاولة</Button>
+          )}
           <Button size="lg" variant="secondary" className="mt-3 w-full" onClick={() => setSubmitState('idle')}>
             العودة للمراجعة
           </Button>

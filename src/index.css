@@ -75,6 +75,6 @@ a {
   body * { visibility: hidden !important; }
   #invoice-print, #invoice-print * { visibility: visible !important; }
   #invoice-print { position: absolute !important; inset: 0 !important; width: 100% !important; background: #fff !important; color: #1f1714 !important; box-shadow: none !important; }
-  #invoice-print .print\\:hidden { display: none !important; }
-  #invoice-print .print\\:flex { display: flex !important; }
+  #invoice-print .print\:hidden { display: none !important; }
+  #invoice-print .print\:flex { display: flex !important; }
 }

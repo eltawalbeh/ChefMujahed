@@ -92,7 +92,7 @@ export default function B2BProductDetailPage() {
       <main className="mx-auto max-w-[1280px] px-4 py-6 md:px-0 md:py-10">
         <div className="mb-7 text-xs text-[var(--color-text-muted)]"><Link to="/business">الرئيسية للشركات</Link> ‹ <span>{product.name}</span></div>
         <div className="grid gap-8 md:grid-cols-[540px_minmax(0,1fr)] md:gap-12" dir="ltr">
-          <div><ProductGallery /></div>
+          <div><ProductGallery images={product.images} /></div>
           <div dir="rtl" className="min-w-0">
             <div className="inline-flex items-center gap-2 rounded-lg border border-[rgba(112,138,100,.2)] bg-[rgba(112,138,100,.1)] px-4 py-2 text-sm font-semibold text-[#708A64]"><span className="size-2 rounded-full bg-[#708A64]"/>طلبات الشركات مخصص</div>
             <h1 className="mt-3 text-3xl font-bold md:text-[40px]">{product.name}</h1>

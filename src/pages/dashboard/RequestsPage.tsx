@@ -64,7 +64,7 @@ export default function RequestsPage() {
       {data.items.length === 0 ? (
         <DashboardEmpty title="لا توجد طلبات" description="لم يتم العثور على طلبات تطابق معايير البحث الحالية." action={{ label: 'مسح الفلاتر', onClick: () => { setQ(''); setStatus(''); setSource(''); setType('') } }} />
       ) : (
-        <DashboardTable headers={['إجراءات','تاريخ الطلب','المسؤول','نوع التوصيل','حالة الدفع','حالة الطلب','المصدر','النوع','العميل / الشركة','المرجع']} minWidth={1180}>
+        <><div className="space-y-3 md:hidden">{data.items.map((request) => <Link key={request.id} to={`/dashboard/requests/${request.id}`} className="block rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-right shadow-[0_4px_18px_rgba(29,23,20,.04)]"><div className="flex items-start justify-between gap-3"><div><p dir="ltr" className="text-sm font-bold text-[var(--color-text)]">{request.reference}</p><p className="mt-1 text-sm font-semibold">{request.customer_label}</p></div><RequestStatusBadge status={request.status} /></div><div className="mt-4 grid grid-cols-2 gap-3 border-t border-[var(--color-border)] pt-3 text-xs"><div><span className="block text-[var(--color-text-muted)]">الدفع</span><div className="mt-1"><PaymentStatusBadge status={request.payment_status} /></div></div><div><span className="block text-[var(--color-text-muted)]">الاستلام</span><strong className="mt-1 block">{request.fulfillment_type === 'DELIVERY' ? 'توصيل' : 'استلام'}</strong></div><div><span className="block text-[var(--color-text-muted)]">النوع والمصدر</span><strong className="mt-1 block">{request.customer_type} · {REQUEST_SOURCE_LABELS[request.source]}</strong></div><div><span className="block text-[var(--color-text-muted)]">تاريخ الطلب</span><strong className="mt-1 block">{new Date(request.submitted_at).toLocaleDateString('en-JO')}</strong></div></div><span className="mt-4 block text-left text-xs font-semibold text-[var(--color-accent)]">فتح الطلب ←</span></Link>)}</div><div className="hidden md:block"><DashboardTable headers={['إجراءات','تاريخ الطلب','المسؤول','نوع التوصيل','حالة الدفع','حالة الطلب','المصدر','النوع','العميل / الشركة','المرجع']} minWidth={1180}>
           {data.items.map((request) => (
             <DashboardTr key={request.id}>
               <DashboardTd><Link to={`/dashboard/requests/${request.id}`} className="rounded-lg bg-[var(--color-bg)] px-3 py-1.5 text-xs font-medium">تحديث</Link></DashboardTd>
@@ -79,7 +79,7 @@ export default function RequestsPage() {
               <DashboardTd><Link to={`/dashboard/requests/${request.id}`} className="font-bold text-[var(--color-text-muted)]">{request.reference}</Link></DashboardTd>
             </DashboardTr>
           ))}
-        </DashboardTable>
+        </DashboardTable></div></>
       )}
     {manualOpen ? <ManualRequestDialog onClose={() => setManualOpen(false)} onCreated={() => void load()} /> : null}
     </main>

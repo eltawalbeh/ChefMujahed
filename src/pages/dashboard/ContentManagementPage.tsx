@@ -279,14 +279,14 @@ export default function ContentManagementPage() {
   return (
     <main className="p-4 lg:p-8"><div className="sticky top-[112px] z-10 mb-6 flex items-center justify-between gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/95 p-4 shadow-sm backdrop-blur" dir={locale === "en" ? "ltr" : "rtl"}><div><p className="font-semibold">تغييرات محتوى الموقع</p><p className="text-xs text-[var(--color-text-muted)]">الحفظ متاح دائماً من هذا الشريط.</p></div><div className="flex gap-2"><Button variant="ghost" onClick={() => void load(true)}>{locale === "en" ? "Reset" : "تراجع"}</Button><Button disabled={saving} onClick={() => void save()}>{saving ? dashboardText(locale, "common.saving") : dashboardText(locale, "common.save")}</Button></div></div>
       <div className="grid gap-5 xl:grid-cols-[290px_minmax(0,1fr)]" dir="rtl">
-        <aside dir="rtl" className="h-fit rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
-          <p className="px-3 py-2 text-xs font-semibold text-[var(--color-text-muted)]">صفحات الموقع</p>
+        <aside dir="rtl" className="flex gap-2 overflow-x-auto rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3 xl:block xl:h-fit">
+          <p className="hidden px-3 py-2 text-xs font-semibold text-[var(--color-text-muted)] xl:block">صفحات الموقع</p>
           {pages.map((page) => (
             <button
               key={page.key}
               type="button"
               onClick={() => setPage(page.key)}
-              className={`mb-1 w-full rounded-xl p-3 text-right ${selected === page.key ? 'bg-[var(--color-bg)]' : 'hover:bg-[var(--color-bg)]/60'}`}
+              className={`mb-0 w-[190px] shrink-0 rounded-xl p-3 text-right xl:mb-1 xl:w-full ${selected === page.key ? 'bg-[var(--color-bg)]' : 'hover:bg-[var(--color-bg)]/60'}`}
             >
               <strong className="block text-sm">{page.label}</strong>
               <span className="mt-1 block text-xs leading-5 text-[var(--color-text-muted)]">{page.description}</span>

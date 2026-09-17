@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import QuantityControl from '@/components/ui/QuantityControl'
 import ProductGallery from '@/components/public/ProductGallery'
@@ -17,7 +16,7 @@ import { useRequestDraft } from '@/state/RequestDraftContext'
 
 export default function ProductDetailPage() {
   const { slug } = useParams()
-  const { addItem } = useRequestDraft()
+  const { addItem, isRequestOpen } = useRequestDraft()
 
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
@@ -207,15 +206,10 @@ export default function ProductDetailPage() {
           dir="ltr"
           className="grid gap-7 md:grid-cols-[540px_minmax(0,1fr)] md:gap-12"
         >
-          <ProductGallery />
+          <ProductGallery images={product.images} />
 
           <div dir="rtl">
             <div className="text-right">
-              <Badge tone="success">
-                <span className="size-1.5 rounded-full bg-[var(--color-success-text)]" />
-                متاح
-              </Badge>
-
               <h1 className="mt-3 text-3xl font-bold text-[var(--color-text)] md:text-[40px]">
                 {product.name}
               </h1>
@@ -291,7 +285,7 @@ export default function ProductDetailPage() {
         </div>
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-4 md:hidden">
+      <div className={`fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-4 md:hidden ${isRequestOpen ? 'hidden' : ''}`}>
         <div className="mx-auto flex max-w-md items-center gap-4">
           <Button
             size="lg"

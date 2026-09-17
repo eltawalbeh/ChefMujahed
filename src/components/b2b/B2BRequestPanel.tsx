@@ -47,10 +47,10 @@ export default function B2BRequestPanel() {
         ) : null}
       </aside>
 
-      <section className="fixed inset-x-0 bottom-0 z-[60] rounded-t-3xl bg-[var(--color-surface)] px-4 pb-5 pt-2 shadow-[0_-4px_14px_rgba(0,0,0,.12)] md:hidden">
+      <section role="dialog" aria-modal="true" aria-labelledby="b2b-request-panel-title" className="fixed inset-x-0 bottom-0 z-[60] flex max-h-[calc(100dvh-12px)] flex-col overflow-hidden rounded-t-3xl bg-[var(--color-surface)] px-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-4px_14px_rgba(0,0,0,.12)] md:hidden">
         <div className="mx-auto h-1 w-10 rounded-full bg-[var(--color-border)]" />
-        <div className="mt-3 flex items-center justify-between"><button onClick={closeRequest}>×</button><div className="flex items-center gap-2"><span className="rounded-full bg-[var(--color-bg)] px-2 py-1 text-xs">{itemCount} منتج</span><h2 className="text-lg font-bold">الطلب الحالي</h2></div></div>
-        <div className="mt-3 max-h-[230px] overflow-y-auto border-t border-[var(--color-border)] pt-3">
+        <div className="mt-3 flex items-center justify-between"><button type="button" aria-label="إغلاق الطلب" onClick={closeRequest} className="grid size-10 place-items-center rounded-full text-xl text-[var(--color-text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]">×</button><div className="flex items-center gap-2"><span className="rounded-full bg-[var(--color-bg)] px-2 py-1 text-xs">{itemCount} منتج</span><h2 id="b2b-request-panel-title" className="text-lg font-bold">الطلب الحالي</h2></div></div>
+        <div className="mt-3 min-h-0 flex-1 overflow-y-auto border-t border-[var(--color-border)] pt-3">
           {items.length ? <div className="space-y-3">{items.map((item) => <B2BRequestItem key={item.id} item={item} onQuantityChange={(q) => updateQuantity(item.id, q)} onRemove={() => removeItem(item.id)} />)}</div> : <div className="py-8 text-center"><p className="font-bold">لا توجد منتجات في طلبك حالياً</p><p className="mt-2 text-sm text-[var(--color-text-muted)]">أضف منتجاً لبدء طلب الشركات.</p></div>}
         </div>
         {items.length ? <><p className="mt-3 border-t border-[var(--color-border)] pt-3 text-center text-xs text-[var(--color-text-muted)]">* الطلب خاضع للمراجعة ولا يعتبر تأكيداً نهائياً.</p><Button size="lg" className="mt-3 w-full" onClick={continueRequest}>متابعة الطلب</Button></> : null}

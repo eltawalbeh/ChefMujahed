@@ -103,14 +103,14 @@ export default function RequestPanel() {
         ) : null}
       </aside>
 
-      <section className="fixed inset-x-0 bottom-0 z-[60] rounded-t-[24px] bg-[var(--color-surface)] px-4 pb-6 pt-3 shadow-[0_-4px_12px_rgba(0,0,0,.12)] md:hidden">
+      <section role="dialog" aria-modal="true" aria-labelledby="request-panel-title" className="fixed inset-x-0 bottom-0 z-[60] flex max-h-[calc(100dvh-12px)] flex-col overflow-hidden rounded-t-[24px] bg-[var(--color-surface)] px-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-4px_12px_rgba(0,0,0,.12)] md:hidden">
         <div className="mx-auto h-1 w-10 rounded-full bg-[var(--color-border)]" />
 
         <div className="mt-4 flex items-center justify-between">
           <button
             type="button"
             onClick={closeRequest}
-            className="text-xl text-[var(--color-text-muted)]"
+            className="grid size-10 place-items-center rounded-full text-xl text-[var(--color-text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
           >
             ×
           </button>
@@ -119,7 +119,7 @@ export default function RequestPanel() {
             <span className="rounded-full bg-[var(--color-text-muted)] px-2 py-1 text-xs text-white">
               {itemCount} منتجات
             </span>
-            <h2 className="text-lg font-bold text-[var(--color-text)]">
+            <h2 id="request-panel-title" className="text-lg font-bold text-[var(--color-text)]">
               الطلب
             </h2>
           </div>
@@ -127,7 +127,7 @@ export default function RequestPanel() {
 
         <div className="mt-4 border-t border-[var(--color-border)]" />
 
-        <div className="max-h-[260px] overflow-y-auto py-4">
+        <div className="min-h-0 flex-1 overflow-y-auto py-4">
           {items.length ? (
             <div className="space-y-3">
               {items.map((item) => (

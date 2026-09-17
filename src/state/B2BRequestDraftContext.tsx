@@ -9,6 +9,7 @@ import {
 } from 'react'
 import {
   createClientId,
+  isUuid,
   requestItemCount,
   sameRequestItemConfiguration,
   type AddRequestItemInput,
@@ -59,7 +60,9 @@ function readDraft() {
 export function B2BRequestDraftProvider({ children }: { children: ReactNode }) {
   const initial = useMemo(() => readDraft(), []) as any
   const [items, setItems] = useState<RequestItem[]>(initial.items ?? [])
-  const [clientSubmissionId, setClientSubmissionId] = useState<string>(initial.clientSubmissionId ?? createClientId('b2b'))
+  const [clientSubmissionId, setClientSubmissionId] = useState<string>(() =>
+    isUuid(initial.clientSubmissionId) ? initial.clientSubmissionId : createClientId(),
+  )
   const [company, setCompany] = useState<B2BCompanyDraft>(initial.company ?? defaultCompany)
   const [fulfillment, setFulfillment] = useState<FulfillmentDraft>(initial.fulfillment ?? defaultFulfillment)
   const [generalNotes, setGeneralNotes] = useState<string>(initial.generalNotes ?? '')
@@ -75,7 +78,7 @@ export function B2BRequestDraftProvider({ children }: { children: ReactNode }) {
       if (index >= 0) {
         return current.map((item, i) => i === index ? { ...item, quantity: item.quantity + incoming.quantity } : item)
       }
-      return [...current, { ...incoming, id: createClientId('b2b-item'), addedAt: new Date().toISOString() }]
+      return [...current, { ...incoming, id: createClientId(), addedAt: new Date().toISOString() }]
     })
   }, [])
 
@@ -87,7 +90,7 @@ export function B2BRequestDraftProvider({ children }: { children: ReactNode }) {
 
   const clearRequest = useCallback(() => {
     setItems([])
-    setClientSubmissionId(createClientId('b2b'))
+    setClientSubmissionId(createClientId())
     setCompany(defaultCompany)
     setFulfillment(defaultFulfillment)
     setGeneralNotes('')

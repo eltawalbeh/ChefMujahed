@@ -77,7 +77,8 @@ export default function Seo() {
     document.documentElement.dir = 'rtl'
 
     upsertMeta('name', 'description', meta.description)
-    upsertMeta('name', 'robots', 'index, follow')
+    const isTransactional = location.pathname.startsWith('/request/') || location.pathname.startsWith('/business/request/') || location.pathname.includes('/submitted/')
+    upsertMeta('name', 'robots', isTransactional ? 'noindex, nofollow' : 'index, follow')
     upsertMeta('property', 'og:title', meta.title)
     upsertMeta('property', 'og:description', meta.description)
     upsertMeta('property', 'og:type', 'website')

@@ -5,6 +5,7 @@ import { useDashboard } from '@/state/DashboardContext'
 import type { DashboardRequestListItem } from '@/types/dashboard'
 import { DashboardError, DashboardLoading } from '@/components/dashboard/DashboardStates'
 import { reportLabel } from '@/domain/reporting'
+import { supabase } from '@/lib/supabase'
 
 type NotificationItem = {
   id: string
@@ -41,7 +42,15 @@ export default function NotificationsPage() {
     }
   }, [runtime])
 
-  useEffect(() => { void load() }, [load])
+  useEffect(() => {
+    void load()
+    const channel = supabase.channel('dashboard-notifications-page').on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'requests' },
+      () => void load(),
+    ).subscribe()
+    return () => { void supabase.removeChannel(channel) }
+  }, [load])
 
   if (error) return <DashboardError onRetry={() => void load()} />
   if (!items) return <DashboardLoading />

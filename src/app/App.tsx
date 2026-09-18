@@ -5,10 +5,12 @@ import DashboardLayout from '@/layouts/DashboardLayout'
 import ProductionLayout from '@/layouts/ProductionLayout'
 import DashboardLoginPage from '@/pages/auth/DashboardLoginPage'
 import ChangePasswordPage from '@/pages/auth/ChangePasswordPage'
+import NotFoundPage from '@/pages/public/NotFoundPage'
+import AppErrorBoundary from '@/components/app/AppErrorBoundary'
 
 export default function App() {
   return (
-    <Routes>
+    <AppErrorBoundary><Routes>
       <Route element={<PublicLayout />}>
         {appRoutes.public.map((route) => (
           <Route key={route.path} path={route.path} element={route.element} />
@@ -30,7 +32,7 @@ export default function App() {
         ))}
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes></AppErrorBoundary>
   )
 }

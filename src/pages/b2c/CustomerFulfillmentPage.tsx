@@ -1,6 +1,6 @@
 import { FormEvent, useMemo, useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
-import BrandLogo from '@/components/public/BrandLogo'
+import { Navigate, useNavigate } from 'react-router-dom'
+import PublicHeader from '@/components/public/PublicHeader'
 import PublicFooter from '@/components/public/PublicFooter'
 import Button from '@/components/ui/Button'
 import RequestItemRow from '@/components/request/RequestItemRow'
@@ -67,33 +67,17 @@ export default function CustomerFulfillmentPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
-      <header className="border-b border-[var(--color-border)] bg-[var(--color-surface)]">
-        <div dir="ltr" className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-4 md:h-20 md:px-16">
-          <div dir="rtl">
-            <BrandLogo compact className="md:hidden" />
-            <BrandLogo className="hidden md:inline-flex" />
-          </div>
-
-          <div dir="rtl" className="flex items-center gap-3 text-xs md:text-sm">
-            <Link to="/" className="text-[var(--color-text)]">
-              ← العودة للتصفح
-            </Link>
-            <span className="hidden h-6 w-px bg-[var(--color-border)] md:block" />
-            <span className="hidden text-[var(--color-text-muted)] md:inline">
-              الخطوة ٢ من ٣:
-            </span>
-            <strong className="text-[var(--color-text-muted)]">
-              تفاصيل الاستلام والطلب
-            </strong>
-          </div>
-        </div>
-      </header>
+      <PublicHeader />
 
       <form
         onSubmit={submit}
         dir="ltr"
         className="mx-auto grid max-w-[1312px] gap-8 px-4 py-6 md:grid-cols-[380px_720px] md:px-0 md:py-12"
       >
+        <div dir="rtl" className="order-0 col-span-full flex items-center justify-between text-sm text-[var(--color-text-muted)]">
+          <strong className="text-[var(--color-text)]">تفاصيل الطلب والاستلام</strong>
+          <span>الخطوة ٢ من ٣</span>
+        </div>
         <aside dir="rtl" className="order-2 md:order-1">
           <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)]">
             <div className="flex items-center justify-between border-b border-[var(--color-border)] p-5">

@@ -16,7 +16,7 @@ import { useRequestDraft } from '@/state/RequestDraftContext'
 
 export default function ProductDetailPage() {
   const { slug } = useParams()
-  const { addItem, isRequestOpen } = useRequestDraft()
+  const { addItem, isRequestOpen, openRequest } = useRequestDraft()
 
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
@@ -72,6 +72,7 @@ export default function ProductDetailPage() {
   }, [slug, reloadKey])
 
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
     setQuantity(1)
     setNotes('')
     setCustomization({})
@@ -187,13 +188,14 @@ export default function ProductDetailPage() {
 
     setAdded(true)
     window.setTimeout(() => setAdded(false), 1600)
+    openRequest()
   }
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
       <PublicHeader />
 
-      <main className="mx-auto max-w-[1440px] px-4 pb-28 pt-4 md:px-20 md:pb-16 md:pt-10">
+      <main className="mx-auto max-w-[1440px] px-4 pb-32 pt-4 md:px-20 md:pb-16 md:pt-10">
         <nav className="mb-5 flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-muted)]">
           <Link to="/">الرئيسية</Link>
           <span>›</span>
@@ -285,7 +287,7 @@ export default function ProductDetailPage() {
         </div>
       </main>
 
-      <div className={`fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-4 md:hidden ${isRequestOpen ? 'hidden' : ''}`}>
+      <div className={`fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:hidden ${isRequestOpen ? 'hidden' : ''}`}>
         <div className="mx-auto flex max-w-md items-center gap-4">
           <Button
             size="lg"
@@ -293,7 +295,7 @@ export default function ProductDetailPage() {
             disabled={!canAdd}
             onClick={handleAddToRequest}
           >
-            {added ? 'تمت الإضافة' : 'إضافة إلى الطلب'}
+            {added ? 'تمت الإضافة — عرض الطلب' : 'إضافة إلى الطلب'}
           </Button>
           <div className="min-w-20 text-left">
             <p className="text-lg font-bold text-[var(--color-text)]">{formatJod(total)}</p>

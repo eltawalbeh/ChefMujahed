@@ -46,6 +46,16 @@ export default function B2BProductDetailPage() {
     void load(); return () => { cancelled = true }
   }, [slug, reloadKey])
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    setQuantity(1)
+    setCustomization({})
+    setNotes('')
+    setCustomUnitMode(false)
+    setCustomUnit('')
+    setAdded(false)
+  }, [slug])
+
   const units = useMemo(() => product ? unitsForCustomerType(product.units, 'B2B') : [], [product])
   const requiredValid = useMemo(() => product?.customizationFields?.every((field) => {
     if (!field.required) return true
@@ -89,7 +99,7 @@ export default function B2BProductDetailPage() {
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
       <B2BHeader />
-      <main className="mx-auto max-w-[1280px] px-4 py-6 md:px-0 md:py-10">
+      <main className="mx-auto max-w-[1280px] px-4 pb-32 pt-6 md:px-0 md:py-10">
         <div className="mb-7 text-xs text-[var(--color-text-muted)]"><Link to="/business">الرئيسية للشركات</Link> ‹ <span>{product.name}</span></div>
         <div className="grid gap-8 md:grid-cols-[540px_minmax(0,1fr)] md:gap-12" dir="ltr">
           <div><ProductGallery images={product.images} /></div>
@@ -114,10 +124,16 @@ export default function B2BProductDetailPage() {
             {product.customizationFields?.length ? <div className="mt-6"><CustomizationFields fields={product.customizationFields} values={customization} onChange={(fieldId, value) => setCustomization((current) => ({ ...current, [fieldId]: value }))} /></div> : null}
             <section className="mt-6"><h2 className="mb-3 font-semibold">ملاحظات على هذا المنتج</h2><NotesField value={notes} onChange={setNotes} /></section>
             {!canAdd ? <p role="alert" className="mt-3 text-xs text-red-700">أكمل الوحدة والخيارات الإلزامية قبل الإضافة.</p> : null}
-            <Button size="lg" className="mt-6 w-full" disabled={!canAdd} onClick={add}>{added ? 'تمت الإضافة' : 'إضافة إلى الطلب'}</Button>
+            <Button size="lg" className="mt-6 hidden w-full md:inline-flex" disabled={!canAdd} onClick={add}>{added ? 'تمت الإضافة — عرض الطلب' : 'إضافة إلى الطلب'}</Button>
           </div>
         </div>
       </main>
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:hidden">
+        <div className="mx-auto flex max-w-md items-center gap-4">
+          <Button size="lg" className="flex-1" disabled={!canAdd} onClick={add}>{added ? 'تمت الإضافة — عرض الطلب' : 'إضافة إلى الطلب'}</Button>
+          <p className="text-left text-xs text-[var(--color-text-muted)]">{quantity} وحدة</p>
+        </div>
+      </div>
       <PublicFooter />
     </div>
   )

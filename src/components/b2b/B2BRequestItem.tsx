@@ -1,4 +1,5 @@
 import QuantityControl from '@/components/ui/QuantityControl'
+import { Trash } from '@phosphor-icons/react'
 import type { RequestItem } from '@/types/request'
 
 export default function B2BRequestItem({
@@ -26,7 +27,7 @@ export default function B2BRequestItem({
               ) : null}
             </div>
             {!readOnly && onRemove ? (
-              <button type="button" onClick={onRemove} className="text-xs text-[var(--color-text-muted)]">حذف</button>
+              <button type="button" onClick={onRemove} aria-label={`حذف ${item.productName}`} className="grid size-9 place-items-center rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg)] hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"><Trash size={18} aria-hidden="true" /></button>
             ) : null}
           </div>
           <div className="mt-3 flex items-center justify-between">

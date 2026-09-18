@@ -1,4 +1,5 @@
 import QuantityControl from '@/components/ui/QuantityControl'
+import { Trash } from '@phosphor-icons/react'
 import { formatJod } from '@/lib/format'
 import type { RequestItem } from '@/types/request'
 
@@ -36,9 +37,10 @@ export default function RequestItemRow({
             <button
               type="button"
               onClick={onRemove}
-              className="shrink-0 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+              aria-label={`حذف ${item.productName}`}
+              className="grid size-9 shrink-0 place-items-center rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg)] hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
             >
-              حذف
+              <Trash size={18} aria-hidden="true" />
             </button>
           </div>
 

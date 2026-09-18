@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
-import BrandLogo from '@/components/public/BrandLogo'
+import { Navigate, useNavigate } from 'react-router-dom'
+import PublicHeader from '@/components/public/PublicHeader'
 import PublicFooter from '@/components/public/PublicFooter'
 import Button from '@/components/ui/Button'
 import { formatJod } from '@/lib/format'
@@ -188,21 +188,7 @@ export default function RequestReviewPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
-      <header className="border-b border-[var(--color-border)] bg-[var(--color-surface)]">
-        <div dir="ltr" className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-4 md:h-20 md:px-16">
-          <div dir="rtl">
-            <BrandLogo compact className="md:hidden" />
-            <BrandLogo className="hidden md:inline-flex" />
-          </div>
-
-          <div dir="rtl" className="flex items-center gap-3 text-xs md:text-sm">
-            <Link to="/request/details" className="text-[var(--color-text)]">← العودة للتعديل</Link>
-            <span className="hidden h-6 w-px bg-[var(--color-border)] md:block" />
-            <span className="hidden text-[var(--color-text-muted)] md:inline">الخطوة ٣ من ٣:</span>
-            <strong className="text-[var(--color-text-muted)]">مراجعة وتقديم الطلب</strong>
-          </div>
-        </div>
-      </header>
+      <PublicHeader />
 
       <div className="mx-auto max-w-[1312px] px-4 py-4 md:hidden">
         <div className="mb-4 flex items-center justify-between text-xs">

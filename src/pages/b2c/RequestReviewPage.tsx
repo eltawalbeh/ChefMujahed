@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { CaretDown } from '@phosphor-icons/react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import PublicHeader from '@/components/public/PublicHeader'
 import PublicFooter from '@/components/public/PublicFooter'
@@ -190,7 +191,10 @@ export default function RequestReviewPage() {
     <div className="min-h-screen bg-[var(--color-bg)]">
       <PublicHeader />
 
-      <div className="mx-auto max-w-[1312px] px-4 py-4 md:hidden">
+      <section className="fixed inset-x-0 bottom-0 z-50 flex max-h-[calc(100dvh-10px)] flex-col overflow-hidden rounded-t-[26px] bg-[var(--color-surface)] shadow-[0_-8px_28px_rgba(29,23,20,.18)] md:hidden" role="dialog" aria-modal="true" aria-labelledby="review-title">
+        <div className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-[var(--color-border)]" />
+        <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-3"><button type="button" onClick={() => navigate('/request/details')} className="grid size-10 place-items-center rounded-xl border border-[var(--color-border)]" aria-label="العودة للتعديل"><CaretDown size={20} /></button><div className="text-right"><strong id="review-title" className="block text-sm">مراجعة وتقديم الطلب</strong><span className="text-xs text-[var(--color-text-muted)]">الخطوة ٣ من ٣</span></div></div>
+        <div className="min-h-0 overflow-y-auto px-4 py-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
         <div className="mb-4 flex items-center justify-between text-xs">
           <span className="text-[var(--color-text-muted)]">الخطوة ٣ من ٣</span>
           <strong className="text-[var(--color-text-muted)]">مراجعة وتقديم الطلب</strong>
@@ -248,7 +252,8 @@ export default function RequestReviewPage() {
           </p>
           <Button size="lg" className="h-[52px] w-full rounded-xl" onClick={handleSubmit}>تقديم الطلب</Button>
         </div>
-      </div>
+        </div>
+      </section>
 
       <main dir="ltr" className="mx-auto hidden max-w-[1312px] grid-cols-[380px_720px] justify-end gap-12 px-0 py-12 md:grid">
         <aside dir="rtl">

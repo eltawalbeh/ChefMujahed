@@ -45,7 +45,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') { setRuntime({ mode: 'unauthorized' }); return }
       if (event === 'SIGNED_IN' || event === 'USER_UPDATED') { void refreshRuntime() }
-      if (event === 'TOKEN_REFRESHED') { void refreshRuntime({ silent: true }) }
     })
     return () => data.subscription.unsubscribe()
   }, [refreshRuntime])

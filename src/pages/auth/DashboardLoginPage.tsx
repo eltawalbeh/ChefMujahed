@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import BrandLogo from '@/components/public/BrandLogo'
+import { Eye, EyeSlash } from '@phosphor-icons/react'
 import Button from '@/components/ui/Button'
 import { dashboardSignIn } from '@/data/auth'
 import { supabase } from '@/lib/supabase'
@@ -42,7 +43,7 @@ export default function DashboardLoginPage() {
           <BrandLogo className="justify-center" />
           <p className="mt-5 text-xs font-bold text-[var(--color-accent)]">الوصول الداخلي</p>
           <h1 className="mt-2 text-3xl font-bold">تسجيل الدخول</h1>
-          <p className="mt-2 text-sm leading-7 text-[var(--color-text-muted)]">للمستخدمين المصرح لهم فقط: مدير النظام، المدير، والمشرف.</p>
+          <p className="mt-2 text-sm leading-7 text-[var(--color-text-muted)]">للمستخدمين المصرح لهم فقط.</p>
         </div>
 
         <form className="mt-7 space-y-4" onSubmit={submit}>
@@ -52,7 +53,7 @@ export default function DashboardLoginPage() {
           </label>
           <label className="block text-right">
             <span className="mb-1.5 block text-sm font-semibold">كلمة المرور</span>
-            <div className="relative" dir="ltr"><input type={showPassword?'text':'password'} autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-white px-4 pr-12 text-left outline-none focus:border-[var(--color-accent)]" /><button type="button" onClick={()=>setShowPassword(value=>!value)} className="absolute inset-y-0 right-2 my-auto h-9 rounded-lg px-2 text-xs font-semibold text-[var(--color-text-muted)] hover:bg-[var(--color-bg)]" aria-label={showPassword?'إخفاء كلمة المرور':'إظهار كلمة المرور'}>{showPassword?'إخفاء':'إظهار'}</button></div>
+            <div className="relative" dir="ltr"><input type={showPassword?'text':'password'} autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-white px-4 pr-12 text-left outline-none focus:border-[var(--color-accent)]" /><button type="button" onClick={()=>setShowPassword(value=>!value)} className="absolute inset-y-0 right-2 my-auto grid size-9 place-items-center rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg)]" aria-label={showPassword?'إخفاء كلمة المرور':'إظهار كلمة المرور'}>{showPassword?<EyeSlash size={20}/>:<Eye size={20}/>}</button></div>
           </label>
           {error ? <div role="alert" className="rounded-xl bg-[#FFF1F1] p-3 text-center text-sm font-semibold text-[#9B2C2C]">{error}</div> : null}
           <Button size="lg" className="w-full" type="submit" disabled={busy || !email.trim() || !password}>{busy ? 'جاري تسجيل الدخول...' : 'دخول لوحة التحكم'}</Button>

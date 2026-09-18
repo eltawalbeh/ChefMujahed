@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
-import BrandLogo from '@/components/public/BrandLogo'
+import PublicHeader from '@/components/public/PublicHeader'
 import PublicFooter from '@/components/public/PublicFooter'
 import Button from '@/components/ui/Button'
 import {
@@ -102,29 +102,10 @@ export default function SubmittedBoundaryPage() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[var(--color-bg)]">
-      <header className="hidden border-b border-[var(--color-border)] bg-[var(--color-surface)] md:block">
-        <div dir="ltr" className="mx-auto flex h-20 max-w-[1440px] items-center justify-between px-16">
-          <Link to="/contact" className="text-sm font-medium text-[var(--color-text-muted)]">
-            تواصل معنا
-          </Link>
+      <PublicHeader />
 
-          <nav dir="rtl" className="flex items-center gap-8 text-sm">
-            <Link to="/" className="text-[var(--color-text-muted)]">الرئيسية</Link>
-            <Link to="/products" className="relative font-bold text-[var(--color-text)]">
-              قائمتنا
-              <span className="absolute -bottom-2 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-[var(--color-accent)]" />
-            </Link>
-            <Link to="/business" className="text-[var(--color-text-muted)]">للشركات</Link>
-          </nav>
-
-          <div dir="rtl">
-            <BrandLogo />
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto grid min-h-[709px] max-w-[1440px] place-items-center px-5 py-5 md:min-h-[903px] md:px-16 md:py-16">
-        <section className="w-full max-w-[600px] bg-[var(--color-surface)] text-center md:rounded-[20px] md:border md:border-[var(--color-border)] md:p-10 md:shadow-[0_10px_20px_rgba(0,0,0,.04)]">
+      <main className="mx-auto grid max-w-[1440px] place-items-center px-4 py-6 md:min-h-[820px] md:px-16 md:py-16">
+        <section className="w-full max-w-[600px] rounded-[20px] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 text-center shadow-[0_10px_20px_rgba(0,0,0,.04)] md:p-10">
           <div className="mx-auto grid size-[72px] place-items-center rounded-full bg-[#E8F5E9] text-[#26A661] md:size-20">
             <svg width="36" height="32" viewBox="0 0 36 32" fill="none" aria-hidden="true">
               <path d="M7 16.5 14.5 24 29 8.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
@@ -207,9 +188,7 @@ export default function SubmittedBoundaryPage() {
         </section>
       </main>
 
-      <div className="hidden md:block">
-        <PublicFooter />
-      </div>
+      <PublicFooter />
     </div>
   )
 }

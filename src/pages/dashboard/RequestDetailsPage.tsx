@@ -15,22 +15,13 @@ import { DashboardError, DashboardLoading, DashboardRestricted } from '@/compone
 import { PaymentStatusBadge, RequestStatusBadge } from '@/components/dashboard/DashboardStatusBadge'
 import InvoicePanel from '@/components/dashboard/InvoicePanel'
 import PaymentWorkflowPanel from '@/components/dashboard/PaymentWorkflowPanel'
-import DashboardSelect from '@/components/dashboard/DashboardSelect'
 import DeliveryActions from '@/components/dashboard/DeliveryActions'
 import { canLinkCustomers, canManagePricing } from '@/lib/dashboardPermissions'
 import { formatJod } from '@/lib/format'
 import Button from '@/components/ui/Button'
-import { REQUEST_STATUS_LABELS } from '@/domain/constants'
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 lg:p-6"><h2 className="font-bold">{title}</h2><div className="mt-4 border-t border-[var(--color-border)] pt-4">{children}</div></section>
-}
-
-function manualStatusOptions(status: string) {
-  if (status === 'NEW' || status === 'CONTACT_REQUIRED') return [status, 'AWAITING_CONFIRMATION', 'CANCELLED']
-  if (status === 'AWAITING_CONFIRMATION') return [status, 'CANCELLED']
-  if (status === 'APPROVED' || status === 'PREPARING' || status === 'READY' || status === 'OUT_FOR_DELIVERY') return [status, 'CANCELLED']
-  return [status]
 }
 
 export default function RequestDetailsPage() {
@@ -78,9 +69,8 @@ export default function RequestDetailsPage() {
     <main className="space-y-6 p-4 lg:p-8">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex flex-wrap gap-2">
-          <DashboardSelect value={request.status} disabled={saving} className="min-w-[220px]" onChange={(e) => void mutate(() => updateDashboardRequestStatus(runtime, id, e.target.value))}>{manualStatusOptions(request.status).map((status) => <option key={status} value={status}>{REQUEST_STATUS_LABELS[status]}</option>)}</DashboardSelect>
-          <Button variant="secondary" disabled>تعديل الطلب</Button>
-          <Button variant="ghost" onClick={() => void mutate(() => updateDashboardRequestStatus(runtime, id, 'CANCELLED'))}>إلغاء الطلب</Button>
+          {(request.status === 'NEW' || request.status === 'CONTACT_REQUIRED') ? <Button disabled={saving} onClick={() => void mutate(() => updateDashboardRequestStatus(runtime, id, 'AWAITING_CONFIRMATION'))}>بدء متابعة الطلب</Button> : null}
+          {request.status !== 'CANCELLED' && request.status !== 'COMPLETED' ? <Button variant="ghost" disabled={saving} onClick={() => { if (window.confirm('هل تريد إلغاء هذا الطلب؟')) void mutate(() => updateDashboardRequestStatus(runtime, id, 'CANCELLED')) }}>إلغاء الطلب</Button> : null}
         </div>
         <div className="text-sm text-[var(--color-text-muted)]"><Link to="/dashboard/requests">الطلبات</Link> ‹ <strong>{request.reference}</strong></div>
       </div>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import PublicHeader from '@/components/public/PublicHeader'
 import PublicFooter from '@/components/public/PublicFooter'
@@ -51,6 +51,7 @@ export default function SubmittedBoundaryPage() {
   const { reference = '' } = useParams()
   const location = useLocation()
   const [whatsAppState, setWhatsAppState] = useState<WhatsAppState>('idle')
+  const openedForReference = useRef<string | null>(null)
 
   const submission = useMemo<SubmissionState>(() => {
     const routeState = location.state as SubmissionState | null
@@ -75,6 +76,13 @@ export default function SubmittedBoundaryPage() {
   }
 
   const message = buildWhatsAppMessage(handoff)
+
+  useEffect(() => {
+    if (!reference || openedForReference.current === reference || !navigator.onLine) return
+    openedForReference.current = reference
+    const popup = window.open(buildWhatsAppUrl(message), '_blank', 'noopener,noreferrer')
+    setWhatsAppState(popup ? 'opened' : 'failed')
+  }, [message, reference])
 
   const openWhatsApp = () => {
     if (!navigator.onLine) {
@@ -137,20 +145,11 @@ export default function SubmittedBoundaryPage() {
 
           <div className="rounded-xl border border-[var(--color-border)] bg-white p-4 text-right md:p-6">
             <p className="text-[15px] font-semibold leading-6 text-[var(--color-text)]">
-              أرسل الرسالة الجاهزة عبر واتساب لمتابعة وتأكيد طلبك مباشرة مع الشيف.
+              يتم الآن فتح واتساب برسالة جاهزة لمتابعة الطلب مباشرة مع الشيف.
             </p>
 
-            <button
-              type="button"
-              onClick={openWhatsApp}
-              className="mt-4 inline-flex h-[52px] w-full items-center justify-center gap-2.5 rounded-xl bg-[#26A661] px-6 text-base font-semibold text-white transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#26A661] focus-visible:ring-offset-2"
-            >
-              <WhatsAppIcon />
-              متابعة الطلب عبر واتساب
-            </button>
-
             <p className="mt-4 text-center text-xs leading-5 text-[var(--color-text-muted)] md:text-[13px]">
-              سيتم فتح تطبيق واتساب ومعه رسالة مجهزة بتفاصيل طلبك، يرجى إرسالها دون تعديل.
+              ستجد رسالة مجهزة بتفاصيل طلبك؛ أرسلها مباشرة لإكمال المتابعة.
             </p>
 
             {whatsAppState === 'opened' ? (

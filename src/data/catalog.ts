@@ -176,6 +176,19 @@ export async function getPublicCategories(): Promise<CatalogCategory[]> {
 }
 
 async function getProductsForChannels(channels: ProductChannel[], categoryId?: string) {
+  const fallback = async () => {
+    let query = supabase
+      .from('products')
+      .select('id,name_ar,slug,sku,status,availability,channel,base_price_jod,category_id,short_description_ar,long_description_ar,b2b_allow_custom_unit')
+      .eq('public_visible', true)
+      .eq('status', 'ACTIVE')
+      .in('channel', channels)
+      .order('sort_order', { ascending: true })
+    if (categoryId) query = query.eq('category_id', categoryId)
+    const { data, error } = await query
+    if (error) throw error
+    return ((data ?? []) as unknown as ProductRow[]).map(mapProduct)
+  }
   try {
     let query = supabase
       .from('products')
@@ -195,7 +208,9 @@ async function getProductsForChannels(channels: ProductChannel[], categoryId?: s
     if (error) throw error
     return ((data ?? []) as unknown as ProductRow[]).map(mapProduct)
   } catch {
-    return []
+    // A broken nested relation must not hide the actual public catalogue.
+    // Product details can still load their related data when available.
+    try { return await fallback() } catch { return [] }
   }
 }
 
@@ -219,7 +234,11 @@ async function getProductBySlugForChannels(slug: string, channels: ProductChanne
     if (error) throw error
     return data ? mapProduct(data as unknown as ProductRow) : null
   } catch {
-    return null
+    try {
+      const { data, error } = await supabase.from('products').select('id,name_ar,slug,sku,status,availability,channel,base_price_jod,category_id,short_description_ar,long_description_ar,b2b_allow_custom_unit').eq('slug', slug).eq('public_visible', true).eq('status', 'ACTIVE').in('channel', channels).maybeSingle()
+      if (error) throw error
+      return data ? mapProduct(data as unknown as ProductRow) : null
+    } catch { return null }
   }
 }
 

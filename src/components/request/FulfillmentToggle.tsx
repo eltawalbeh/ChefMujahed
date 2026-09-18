@@ -14,7 +14,7 @@ export default function FulfillmentToggle({
   ]
 
   return (
-    <div className="grid grid-cols-2 gap-1 rounded-[10px] bg-[var(--color-bg)] p-1">
+    <div className="grid grid-cols-2 gap-1 overflow-hidden rounded-xl border border-transparent bg-[var(--color-bg)] p-1">
       {options.map((option) => {
         const active = option.value === value
         return (
@@ -23,7 +23,7 @@ export default function FulfillmentToggle({
             type="button"
             onClick={() => onChange(option.value)}
             className={cn(
-              'h-10 rounded-lg text-sm transition',
+              'min-h-11 min-w-0 rounded-[10px] px-2 text-sm transition-[background-color,box-shadow,color] duration-200',
               active
                 ? 'bg-[var(--color-surface)] font-bold text-[var(--color-text)] shadow-[0_2px_3px_rgba(29,23,20,.07)]'
                 : 'font-medium text-[var(--color-text-muted)]',

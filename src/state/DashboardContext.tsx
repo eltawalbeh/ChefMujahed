@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useRef,
   type ReactNode,
 } from 'react'
 import { getDashboardRuntime, type DashboardRuntime } from '@/data/dashboard'
@@ -23,13 +24,17 @@ type DashboardContextValue = {
 const DashboardContext = createContext<DashboardContextValue | null>(null)
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
-  const [runtime, setRuntime] = useState<DashboardRuntime>({ mode: 'unauthorized' })
-  const [loading, setLoading] = useState(true)
+  const cachedRuntime = (() => { try { const raw = sessionStorage.getItem('chef-mujahed:dashboard-runtime'); return raw ? JSON.parse(raw) as DashboardRuntime : null } catch { return null } })()
+  const [runtime, setRuntime] = useState<DashboardRuntime>(cachedRuntime ?? { mode: 'unauthorized' })
+  const [loading, setLoading] = useState(!cachedRuntime)
+  const hydrated = useRef(Boolean(cachedRuntime))
 
   const refreshRuntime = useCallback(async (options?: { silent?: boolean }) => {
     if (!options?.silent) setLoading(true)
     try {
-      setRuntime(await getDashboardRuntime())
+      const next = await getDashboardRuntime()
+      setRuntime(next)
+      try { sessionStorage.setItem('chef-mujahed:dashboard-runtime', JSON.stringify(next)) } catch { /* storage is optional */ }
     } finally {
       if (!options?.silent) setLoading(false)
     }
@@ -38,16 +43,17 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     await dashboardSignOut()
     setRuntime({ mode: 'unauthorized' })
+    try { sessionStorage.removeItem('chef-mujahed:dashboard-runtime') } catch { /* storage is optional */ }
   }, [])
 
   useEffect(() => {
-    void refreshRuntime()
+    if (!hydrated.current) void refreshRuntime()
     const { data } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_OUT') { setRuntime({ mode: 'unauthorized' }); return }
-      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') { void refreshRuntime() }
+      if (event === 'SIGNED_OUT') { setRuntime({ mode: 'unauthorized' }); try { sessionStorage.removeItem('chef-mujahed:dashboard-runtime') } catch {} ; return }
+      if (event === 'SIGNED_IN' && runtime.mode === 'unauthorized') void refreshRuntime({ silent: true })
     })
     return () => data.subscription.unsubscribe()
-  }, [refreshRuntime])
+  }, [refreshRuntime, runtime.mode])
 
   const role = runtime.role ?? 'SUPERVISOR'
   const value = useMemo(

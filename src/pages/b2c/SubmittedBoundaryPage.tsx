@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
+import { Check } from '@phosphor-icons/react'
 import PublicHeader from '@/components/public/PublicHeader'
 import PublicFooter from '@/components/public/PublicFooter'
 import Button from '@/components/ui/Button'
@@ -27,25 +28,6 @@ type SubmissionState = {
 }
 
 type WhatsAppState = 'idle' | 'opened' | 'failed' | 'copied' | 'offline'
-
-function WhatsAppIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20 11.5a8 8 0 0 1-11.8 7l-4.2 1.2 1.2-4A8 8 0 1 1 20 11.5Z" />
-      <path d="M8.5 8.5c.4 2.8 2.2 4.6 5 5" />
-    </svg>
-  )
-}
 
 export default function SubmittedBoundaryPage() {
   const { reference = '' } = useParams()
@@ -84,21 +66,6 @@ export default function SubmittedBoundaryPage() {
     setWhatsAppState(popup ? 'opened' : 'failed')
   }, [message, reference])
 
-  const openWhatsApp = () => {
-    if (!navigator.onLine) {
-      setWhatsAppState('offline')
-      return
-    }
-
-    const popup = window.open(
-      buildWhatsAppUrl(message),
-      '_blank',
-      'noopener,noreferrer',
-    )
-
-    setWhatsAppState(popup ? 'opened' : 'failed')
-  }
-
   const copyFallback = async () => {
     try {
       await copyText(message)
@@ -115,9 +82,7 @@ export default function SubmittedBoundaryPage() {
       <main className="mx-auto grid max-w-[1440px] place-items-center px-4 py-6 md:min-h-[820px] md:px-16 md:py-16">
         <section className="w-full max-w-[600px] rounded-[20px] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 text-center shadow-[0_10px_20px_rgba(0,0,0,.04)] md:p-10">
           <div className="mx-auto grid size-[72px] place-items-center rounded-full bg-[#E8F5E9] text-[#26A661] md:size-20">
-            <svg width="36" height="32" viewBox="0 0 36 32" fill="none" aria-hidden="true">
-              <path d="M7 16.5 14.5 24 29 8.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <Check size={38} weight="bold" aria-hidden="true" />
           </div>
 
           <h1 className="mt-4 text-[24px] font-bold text-[var(--color-text)] md:text-[28px]">

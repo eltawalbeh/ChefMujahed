@@ -13,6 +13,7 @@ function submissionFailureMessage(error: unknown) {
   const message = error instanceof Error ? error.message.toLowerCase() : ''
 
   if (message.includes('preferred date')) return 'يرجى اختيار التاريخ المفضل قبل تقديم الطلب.'
+  if (message.includes('preferred time')) return 'يرجى اختيار الوقت المفضل قبل تقديم الطلب.'
   if (message.includes('delivery address')) return 'يرجى إدخال عنوان التوصيل قبل تقديم الطلب.'
   if (message.includes('client submission') || message.includes('uuid')) return 'انتهت صلاحية جلسة الطلب. أعد فتح المراجعة ثم حاول مرة أخرى.'
   if (message.includes('product') || message.includes('unit')) return 'أحد المنتجات أو وحداته تغيّر أو لم يعد متاحًا. عد إلى الطلب وحدّث المنتجات ثم أعد المحاولة.'
@@ -95,6 +96,12 @@ export default function RequestReviewPage() {
 
     if (!fulfillment.preferredDate) {
       setSubmitMessage('يرجى اختيار التاريخ المفضل قبل تقديم الطلب.')
+      setSubmitState('validation')
+      return
+    }
+
+    if (!fulfillment.preferredTime) {
+      setSubmitMessage('يرجى اختيار الوقت المفضل قبل تقديم الطلب.')
       setSubmitState('validation')
       return
     }

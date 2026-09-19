@@ -23,8 +23,8 @@ export function FormField({
         aria-invalid={Boolean(error)}
         aria-describedby={errorId}
         className={[
-          'h-11 min-w-0 max-w-full rounded-[var(--radius-sm)] border bg-white px-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]/60 focus:ring-2 focus:ring-[var(--color-accent)]/30',
-          props.type === 'date' || props.type === 'time' ? 'appearance-none text-right [direction:ltr]' : '',
+          'h-11 w-full min-w-0 rounded-[var(--radius-sm)] border bg-white px-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]/60 focus:ring-2 focus:ring-[var(--color-accent)]/30',
+          props.type === 'date' || props.type === 'time' ? 'text-right [color-scheme:light] [direction:ltr]' : '',
           error
             ? 'border-red-500 focus:border-red-500'
             : 'border-[var(--color-border)] focus:border-[var(--color-text-muted)]',

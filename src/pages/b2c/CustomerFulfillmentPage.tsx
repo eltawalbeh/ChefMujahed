@@ -12,6 +12,7 @@ import { useRequestDraft } from '@/state/RequestDraftContext'
 
 export default function CustomerFulfillmentPage() {
   const navigate = useNavigate()
+  const today = new Date().toISOString().slice(0, 10)
   const {
     items,
     subtotal,
@@ -42,6 +43,10 @@ export default function CustomerFulfillmentPage() {
       errors.preferredDate = 'يرجى اختيار التاريخ المفضل.'
     }
 
+    if (!fulfillment.preferredTime) {
+      errors.preferredTime = 'يرجى اختيار الوقت المفضل.'
+    }
+
     if (fulfillment.type === 'DELIVERY' && !fulfillment.address?.trim()) {
       errors.address = 'يرجى إدخال عنوان التوصيل.'
     }
@@ -53,6 +58,7 @@ export default function CustomerFulfillmentPage() {
     customer.name.trim().length >= 2 &&
     customer.phone.trim().length >= 7 &&
     Boolean(fulfillment.preferredDate) &&
+    Boolean(fulfillment.preferredTime) &&
     (fulfillment.type === 'COLLECTION' || Boolean(fulfillment.address?.trim()))
 
   if (!items.length) return <Navigate to="/" replace />
@@ -197,6 +203,7 @@ export default function CustomerFulfillmentPage() {
                     name="preferred-date-delivery"
                     error={showErrors ? validationErrors.preferredDate : undefined}
                     type="date"
+                    min={today}
                     value={fulfillment.preferredDate ?? ''}
                     onChange={(event) =>
                       setFulfillment({
@@ -208,7 +215,9 @@ export default function CustomerFulfillmentPage() {
                   />
 
                   <FormField
-                    label="الوقت المفضل (اختياري)"
+                    label="الوقت المفضل"
+                    name="preferred-time-delivery"
+                    error={showErrors ? validationErrors.preferredTime : undefined}
                     type="time"
                     value={fulfillment.preferredTime ?? ''}
                     onChange={(event) =>
@@ -217,6 +226,7 @@ export default function CustomerFulfillmentPage() {
                         preferredTime: event.target.value,
                       })
                     }
+                    required
                   />
                 </div>
               </div>
@@ -227,20 +237,37 @@ export default function CustomerFulfillmentPage() {
                   لتأكيد موعد الاستلام بمجرد مراجعة طلبكم.
                 </div>
 
-                <FormField
-                  label="التاريخ المفضل"
-                  name="preferred-date-collection"
-                  error={showErrors ? validationErrors.preferredDate : undefined}
-                  type="date"
-                  value={fulfillment.preferredDate ?? ''}
-                  onChange={(event) =>
-                    setFulfillment({
-                      ...fulfillment,
-                      preferredDate: event.target.value,
-                    })
-                  }
-                  required
-                />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <FormField
+                    label="التاريخ المفضل"
+                    name="preferred-date-collection"
+                    error={showErrors ? validationErrors.preferredDate : undefined}
+                    type="date"
+                    min={today}
+                    value={fulfillment.preferredDate ?? ''}
+                    onChange={(event) =>
+                      setFulfillment({
+                        ...fulfillment,
+                        preferredDate: event.target.value,
+                      })
+                    }
+                    required
+                  />
+                  <FormField
+                    label="الوقت المفضل"
+                    name="preferred-time-collection"
+                    error={showErrors ? validationErrors.preferredTime : undefined}
+                    type="time"
+                    value={fulfillment.preferredTime ?? ''}
+                    onChange={(event) =>
+                      setFulfillment({
+                        ...fulfillment,
+                        preferredTime: event.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
               </div>
             )}
           </SectionCard>

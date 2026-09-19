@@ -54,7 +54,7 @@ export default function ProductDetailPage() {
         }
 
         setProduct(result)
-        setSelectedUnitId(result.units[0]?.id ?? '')
+        setSelectedUnitId(result.units.find((unit) => unit.availability !== 'UNAVAILABLE')?.id ?? '')
       } catch {
         if (!cancelled) {
           setError('تعذر تحميل المنتج حالياً.')
@@ -80,9 +80,9 @@ export default function ProductDetailPage() {
   }, [slug])
 
   const total = useMemo(() => {
-    if (!product?.basePriceJod) return 0
-    return product.basePriceJod * quantity
-  }, [product, quantity])
+    const unit=product?.units.find((item)=>item.id===selectedUnitId)
+    return (unit?.priceJod ?? product?.basePriceJod ?? 0) * quantity
+  }, [product, quantity, selectedUnitId])
 
   if (notFound) {
     return (
@@ -180,7 +180,7 @@ export default function ProductDetailPage() {
       quantity,
       unitId: selectedUnit.id,
       unitLabel: selectedUnit.label,
-      observedBasePriceJod: product.basePriceJod,
+      observedBasePriceJod: selectedUnit.priceJod ?? product.basePriceJod,
       customization,
       customizationLabels,
       notes: notes.trim() || undefined,
@@ -226,7 +226,7 @@ export default function ProductDetailPage() {
             <div className="hidden items-center justify-between md:flex">
               <span className="text-sm text-[var(--color-text-muted)]">السعر الأساسي</span>
               <span className="text-3xl font-bold text-[var(--color-text)]">
-                {formatJod(product.basePriceJod ?? 0)}
+                {formatJod(selectedUnit?.priceJod ?? product.basePriceJod ?? 0)}
               </span>
             </div>
 

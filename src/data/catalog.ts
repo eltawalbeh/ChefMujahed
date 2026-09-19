@@ -32,6 +32,9 @@ type ProductRow = {
     label_ar: string
     channel: string
     sort_order: number
+    price_jod?: number | null
+    availability?: string
+    is_active?: boolean
   }>
   product_customization_fields?: Array<{
     id: string
@@ -90,10 +93,13 @@ function mapProduct(row: ProductRow): Product {
       row.product_units
         ?.slice()
         .sort((a, b) => a.sort_order - b.sort_order)
+        .filter((unit) => unit.is_active !== false)
         .map((unit) => ({
           id: unit.id,
           label: unit.label_ar,
           channel: unit.channel as ProductChannel,
+          priceJod: unit.price_jod ?? undefined,
+          availability: (unit.availability ?? 'AVAILABLE') as ProductAvailability,
         })) ?? [],
     customizationFields,
     images:
@@ -126,7 +132,10 @@ const productSelect = `
     id,
     label_ar,
     channel,
-    sort_order
+    sort_order,
+    price_jod,
+    availability,
+    is_active
   ),
   product_customization_fields (
     id,

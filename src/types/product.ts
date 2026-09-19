@@ -6,6 +6,8 @@ export type ProductUnit = {
   id: string
   label: string
   channel: ProductChannel
+  priceJod?: number
+  availability?: ProductAvailability
 }
 
 export type ProductImage = {

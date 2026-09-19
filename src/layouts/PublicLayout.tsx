@@ -4,6 +4,7 @@ import { B2BRequestDraftProvider } from '@/state/B2BRequestDraftContext'
 import RequestPanel from '@/components/request/RequestPanel'
 import B2BRequestPanel from '@/components/b2b/B2BRequestPanel'
 import Seo from '@/components/seo/Seo'
+import { PublicPlatformGate } from '@/components/app/PlatformMaintenance'
 
 export default function PublicLayout() {
   const location = useLocation()
@@ -11,23 +12,23 @@ export default function PublicLayout() {
 
   if (isB2B) {
     return (
-      <B2BRequestDraftProvider>
+      <PublicPlatformGate><B2BRequestDraftProvider>
         <div dir="rtl" className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
           <Seo />
           <Outlet />
           <B2BRequestPanel />
         </div>
-      </B2BRequestDraftProvider>
+      </B2BRequestDraftProvider></PublicPlatformGate>
     )
   }
 
   return (
-    <RequestDraftProvider>
+    <PublicPlatformGate><RequestDraftProvider>
       <div dir="rtl" className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
         <Seo />
         <Outlet />
         <RequestPanel />
       </div>
-    </RequestDraftProvider>
+    </RequestDraftProvider></PublicPlatformGate>
   )
 }

@@ -19,7 +19,7 @@ export function unitsForCustomerType(
   units: ProductUnit[],
   customerType: CustomerType,
 ) {
-  return units.filter((unit) => channelSupportsCustomerType(unit.channel, customerType))
+  return units.filter((unit) => channelSupportsCustomerType(unit.channel, customerType) && unit.availability !== 'UNAVAILABLE')
 }
 
 export function isProductOrderable(product: Product) {

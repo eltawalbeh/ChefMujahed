@@ -26,7 +26,7 @@ export default function UnitSelector({
                 : 'border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] hover:border-[var(--color-text-muted)]',
             )}
           >
-            {unit.label}
+            <span>{unit.label}</span>{unit.priceJod != null ? <span dir="ltr" className="mr-1 text-xs opacity-80">{unit.priceJod} JOD</span> : null}
           </button>
         )
       })}

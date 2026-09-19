@@ -10,6 +10,7 @@ import {
   markDashboardRequestPersonal,
 } from '@/data/dashboard'
 import { useDashboard } from '@/state/DashboardContext'
+import { useSitePage } from '@/hooks/useSitePage'
 import type { DashboardRequestDetail } from '@/types/dashboard'
 import { DashboardError, DashboardLoading, DashboardRestricted } from '@/components/dashboard/DashboardStates'
 import { PaymentStatusBadge, RequestStatusBadge } from '@/components/dashboard/DashboardStatusBadge'
@@ -19,6 +20,8 @@ import DeliveryActions from '@/components/dashboard/DeliveryActions'
 import { canLinkCustomers, canManagePricing } from '@/lib/dashboardPermissions'
 import { formatJod } from '@/lib/format'
 import Button from '@/components/ui/Button'
+import { PaperPlaneTilt } from '@phosphor-icons/react'
+import { buildPaymentRequestMessage, buildWhatsAppUrl } from '@/lib/whatsapp'
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 lg:p-6"><h2 className="font-bold">{title}</h2><div className="mt-4 border-t border-[var(--color-border)] pt-4">{children}</div></section>
@@ -32,6 +35,8 @@ export default function RequestDetailsPage() {
   const [saving, setSaving] = useState(false)
   const [restricted, setRestricted] = useState(false)
   const [note, setNote] = useState('')
+  const [paymentMessageError, setPaymentMessageError] = useState('')
+  const contact = useSitePage<{ paymentInstructions?: string }>('contact')
 
   const load = useCallback(async () => {
     try { setError(false); setData(await getDashboardRequest(runtime, id)) }
@@ -53,6 +58,26 @@ export default function RequestDetailsPage() {
   const request = data.request
   const b2b = request.customer_type === 'B2B'
   const label = b2b ? request.company_name_snapshot || request.customer_name_snapshot : request.customer_name_snapshot
+  const paymentInstructions = contact.paymentInstructions?.trim() ?? ''
+
+  const sendPaymentMessage = () => {
+    if (!request.customer_phone_snapshot) {
+      setPaymentMessageError('رقم هاتف العميل غير متوفر لإرسال رسالة واتساب.')
+      return
+    }
+    if (!paymentInstructions) {
+      setPaymentMessageError('أضف تعليمات الدفع أولاً من لوحة التحكم ← المحتوى ← تواصل معنا.')
+      return
+    }
+    setPaymentMessageError('')
+    const message = buildPaymentRequestMessage({
+      reference: request.reference,
+      customerName: label,
+      totalJod: total,
+      instructions: paymentInstructions,
+    })
+    window.open(buildWhatsAppUrl(message, request.customer_phone_snapshot), '_blank', 'noopener,noreferrer')
+  }
 
   const mutate = async (operation: () => Promise<DashboardRequestDetail>) => {
     try {
@@ -168,6 +193,7 @@ export default function RequestDetailsPage() {
               <div className="flex items-center justify-between"><PaymentStatusBadge status={request.payment_status} /><span className="text-[var(--color-text-muted)]">حالة الدفع</span></div>
               <div className="flex items-center justify-between"><strong>{request.payment_method || '--'}</strong><span className="text-[var(--color-text-muted)]">طريقة الدفع</span></div>
               <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-4"><strong className="text-xl text-[var(--color-text-muted)]">{formatJod(total)}</strong><span>المبلغ الإجمالي</span></div>
+              {(request.payment_status === 'NOT_RECORDED' || request.payment_status === 'PENDING') ? <div className="border-t border-[var(--color-border)] pt-4"><Button variant="secondary" className="w-full" onClick={sendPaymentMessage}><PaperPlaneTilt size={18} weight="bold" />إرسال رسالة طريقة الدفع</Button><p className="mt-2 text-center text-xs leading-5 text-[var(--color-text-muted)]">يفتح واتساب على رقم العميل برسالة جاهزة بالمبلغ وتعليمات الدفع.</p>{paymentMessageError ? <p role="alert" className="mt-2 text-center text-xs text-[#9F3A38]">{paymentMessageError}</p> : null}</div> : null}
               <PaymentWorkflowPanel request={request} busy={saving} onSave={async (status, method) => { await mutate(() => updateDashboardPayment(runtime, id, status, method)) }} />
             </div>
           </Card>

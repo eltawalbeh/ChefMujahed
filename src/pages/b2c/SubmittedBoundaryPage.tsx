@@ -4,6 +4,8 @@ import { Check } from '@phosphor-icons/react'
 import PublicHeader from '@/components/public/PublicHeader'
 import PublicFooter from '@/components/public/PublicFooter'
 import Button from '@/components/ui/Button'
+import { useSitePage } from '@/hooks/useSitePage'
+import { appConfig } from '@/app/config'
 import {
   buildWhatsAppMessage,
   buildWhatsAppUrl,
@@ -34,6 +36,7 @@ export default function SubmittedBoundaryPage() {
   const location = useLocation()
   const [whatsAppState, setWhatsAppState] = useState<WhatsAppState>('idle')
   const openedForReference = useRef<string | null>(null)
+  const contact = useSitePage<{ whatsapp?: string }>('contact')
 
   const submission = useMemo<SubmissionState>(() => {
     const routeState = location.state as SubmissionState | null
@@ -58,13 +61,14 @@ export default function SubmittedBoundaryPage() {
   }
 
   const message = buildWhatsAppMessage(handoff)
+  const recipient = contact.whatsapp?.trim() || appConfig.whatsappNumber
 
   useEffect(() => {
-    if (!reference || openedForReference.current === reference || !navigator.onLine) return
+    if (!reference || !recipient || openedForReference.current === reference || !navigator.onLine) return
     openedForReference.current = reference
-    const popup = window.open(buildWhatsAppUrl(message), '_blank', 'noopener,noreferrer')
-    setWhatsAppState(popup ? 'opened' : 'failed')
-  }, [message, reference])
+    setWhatsAppState('opened')
+    window.location.assign(buildWhatsAppUrl(message, recipient))
+  }, [message, recipient, reference])
 
   const copyFallback = async () => {
     try {
@@ -119,7 +123,13 @@ export default function SubmittedBoundaryPage() {
 
             {whatsAppState === 'opened' ? (
               <div role="status" className="mt-4 rounded-lg bg-[#E8F5E9] px-3 py-2 text-center text-xs text-[#507047]">
-                تم فتح واتساب. يرجى إرسال الرسالة يدوياً لإكمال المتابعة.
+                يتم تحويلك إلى واتساب الآن برسالة جاهزة.
+              </div>
+            ) : null}
+
+            {!recipient ? (
+              <div role="alert" className="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] p-3 text-center text-xs leading-5 text-[var(--color-text-muted)]">
+                رقم واتساب المتجر غير مضاف بعد. يرجى إضافته من لوحة التحكم ← المحتوى ← تواصل معنا.
               </div>
             ) : null}
 

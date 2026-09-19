@@ -16,6 +16,13 @@ export type WhatsAppHandoffPayload = {
   items?: RequestItem[]
 }
 
+export type PaymentRequestMessagePayload = {
+  reference: string
+  customerName?: string | null
+  totalJod: number
+  instructions: string
+}
+
 function cleanPhone(value: string) {
   return value.replace(/[^\d]/g, '')
 }
@@ -81,9 +88,30 @@ export function buildWhatsAppMessage({
   return lines.join('\n')
 }
 
-export function buildWhatsAppUrl(message: string) {
+export function buildPaymentRequestMessage({
+  reference,
+  customerName,
+  totalJod,
+  instructions,
+}: PaymentRequestMessagePayload) {
+  const name = customerName?.trim() ? ` ${customerName.trim()}` : ''
+  const lines = [
+    `مرحباً${name}،`,
+    `بخصوص طلبكم رقم ${reference} لدى الشيف مجاهد،`,
+    `المبلغ المطلوب: ${Number(totalJod || 0).toFixed(3)} JOD.`,
+    '',
+    'تعليمات الدفع:',
+    instructions.trim(),
+    '',
+    'بعد إتمام الدفع، يرجى إرسال إشعار التحويل أو صورة الإيصال في هذه المحادثة ليتم اعتماد الطلب وبدء التجهيز.',
+    'شكراً لكم.',
+  ]
+  return lines.join('\n')
+}
+
+export function buildWhatsAppUrl(message: string, recipient?: string | null) {
   const text = encodeURIComponent(message)
-  const number = cleanPhone(appConfig.whatsappNumber)
+  const number = cleanPhone(recipient?.trim() || appConfig.whatsappNumber)
   return number
     ? `https://wa.me/${number}?text=${text}`
     : `https://api.whatsapp.com/send?text=${text}`

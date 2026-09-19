@@ -102,6 +102,7 @@ const pageSchema: Record<SitePageKey, { fields: Field[]; repeaters?: Repeater[] 
       { key: 'title', label: 'العنوان' },
       { key: 'intro', label: 'المقدمة', kind: 'textarea' },
       { key: 'whatsapp', label: 'رقم واتساب' },
+      { key: 'paymentInstructions', label: 'تعليمات الدفع في رسالة واتساب', kind: 'textarea' },
       { key: 'phone', label: 'الهاتف' },
       { key: 'address', label: 'العنوان', kind: 'textarea' },
       { key: 'workingHours', label: 'ساعات العمل', kind: 'textarea' },
@@ -144,6 +145,12 @@ function guidanceFor(field: Field, locale: CmsLocale): Guidance {
   if (key === 'phone') return {
     help: 'اكتب رقم الهاتف بصيغة دولية واضحة. مثال: +962 6 XXX XXXX. يمكن استخدام المسافات للقراءة.',
     placeholder: '+962 ...', maxLength: 24, recommended: '10–20 حرف', dir: 'ltr',
+  }
+  if (key === 'paymentinstructions') return {
+    help: 'هذه هي التفاصيل التي ستُرسل للعميل من صفحة الطلب عند الضغط على «إرسال رسالة الدفع». اكتب طريقة الدفع وبيانات التحويل أو CliQ المعتمدة فقط.',
+    placeholder: 'مثال: التحويل عبر CliQ إلى الرقم ... أو إلى الحساب ... باسم ...',
+    maxLength: 1000,
+    recommended: 'بيانات دفع معتمدة وواضحة',
   }
   if (key === 'address') return {
     help: `اكتب العنوان ${language} كما تريد أن يظهر للعميل: المدينة/المنطقة ثم الشارع أو معلم واضح. لا تضع رابط خرائط هنا.`,

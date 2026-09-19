@@ -152,7 +152,7 @@ const productSelect = `
 export async function getPublicCategories(): Promise<CatalogCategory[]> {
   try {
     const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Timeout fetching categories')), 2500)
+      setTimeout(() => reject(new Error('Timeout fetching categories')), 1200)
     )
     const { data, error } = await Promise.race([
       supabase
@@ -201,7 +201,7 @@ async function getProductsForChannels(channels: ProductChannel[], categoryId?: s
     if (categoryId) query = query.eq('category_id', categoryId)
 
     const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Timeout fetching products')), 2500)
+      setTimeout(() => reject(new Error('Timeout fetching products')), 1200)
     )
 
     const { data, error } = await Promise.race([query, timeout])
@@ -217,7 +217,7 @@ async function getProductsForChannels(channels: ProductChannel[], categoryId?: s
 async function getProductBySlugForChannels(slug: string, channels: ProductChannel[]) {
   try {
     const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Timeout fetching product')), 2500)
+      setTimeout(() => reject(new Error('Timeout fetching product')), 1200)
     )
     const { data, error } = await Promise.race([
       supabase

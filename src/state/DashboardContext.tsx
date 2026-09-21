@@ -24,7 +24,16 @@ type DashboardContextValue = {
 const DashboardContext = createContext<DashboardContextValue | null>(null)
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
-  const cachedRuntime = (() => { try { const raw = sessionStorage.getItem('chef-mujahed:dashboard-runtime'); return raw ? JSON.parse(raw) as DashboardRuntime : null } catch { return null } })()
+  const cachedRuntime = (() => {
+    try {
+      const raw = sessionStorage.getItem('chef-mujahed:dashboard-runtime')
+      const value = raw ? JSON.parse(raw) as DashboardRuntime : null
+      // A cached unauthorized state must never block a freshly-created auth session.
+      return value?.mode === 'secure' ? value : null
+    } catch {
+      return null
+    }
+  })()
   const [runtime, setRuntime] = useState<DashboardRuntime>(cachedRuntime ?? { mode: 'unauthorized' })
   const [loading, setLoading] = useState(!cachedRuntime)
   const hydrated = useRef(Boolean(cachedRuntime))

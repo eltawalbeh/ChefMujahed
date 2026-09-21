@@ -53,6 +53,9 @@ a {
   text-decoration: none;
 }
 
+.dashboard-ltr .text-right { text-align: left; }
+.dashboard-ltr .text-left { text-align: right; }
+
 /* Keep light CTAs legible even when they inherit a light card colour. */
 main a[href="/business"]:not([class*="bg-[#2E1E17]"]) {
   color: #2e1e17 !important;

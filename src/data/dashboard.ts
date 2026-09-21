@@ -309,6 +309,17 @@ export async function saveDashboardProductCustomization(
   )
 }
 
+export async function deleteDashboardProduct(
+  runtime: DashboardRuntime,
+  id: string,
+) {
+  if (runtime.mode === 'preview') return { action: 'DELETED' as const, id }
+  return secureRpc<{ action: 'DELETED' | 'ARCHIVED'; id: string; name?: string }>(
+    'dashboard_delete_product',
+    { p_product_id: id },
+  )
+}
+
 
 export async function getDashboardSitePage(runtime: DashboardRuntime, pageKey: SitePageKey) {
   if (runtime.mode === 'preview') {

@@ -191,6 +191,7 @@ async function getProductsForChannels(channels: ProductChannel[], categoryId?: s
       .select('id,name_ar,slug,sku,status,availability,channel,base_price_jod,category_id,short_description_ar,long_description_ar,b2b_allow_custom_unit')
       .eq('public_visible', true)
       .eq('status', 'ACTIVE')
+      .eq('availability', 'AVAILABLE')
       .in('channel', channels)
       .order('sort_order', { ascending: true })
     if (categoryId) query = query.eq('category_id', categoryId)
@@ -204,6 +205,7 @@ async function getProductsForChannels(channels: ProductChannel[], categoryId?: s
       .select(productSelect)
       .eq('public_visible', true)
       .eq('status', 'ACTIVE')
+      .eq('availability', 'AVAILABLE')
       .in('channel', channels)
       .order('sort_order', { ascending: true })
 
@@ -235,6 +237,7 @@ async function getProductBySlugForChannels(slug: string, channels: ProductChanne
         .eq('slug', slug)
         .eq('public_visible', true)
         .eq('status', 'ACTIVE')
+        .eq('availability', 'AVAILABLE')
         .in('channel', channels)
         .maybeSingle(),
       timeout,
@@ -244,7 +247,7 @@ async function getProductBySlugForChannels(slug: string, channels: ProductChanne
     return data ? mapProduct(data as unknown as ProductRow) : null
   } catch {
     try {
-      const { data, error } = await supabase.from('products').select('id,name_ar,slug,sku,status,availability,channel,base_price_jod,category_id,short_description_ar,long_description_ar,b2b_allow_custom_unit').eq('slug', slug).eq('public_visible', true).eq('status', 'ACTIVE').in('channel', channels).maybeSingle()
+      const { data, error } = await supabase.from('products').select('id,name_ar,slug,sku,status,availability,channel,base_price_jod,category_id,short_description_ar,long_description_ar,b2b_allow_custom_unit').eq('slug', slug).eq('public_visible', true).eq('status', 'ACTIVE').eq('availability','AVAILABLE').in('channel', channels).maybeSingle()
       if (error) throw error
       return data ? mapProduct(data as unknown as ProductRow) : null
     } catch { return null }

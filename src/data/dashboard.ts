@@ -370,8 +370,8 @@ export async function createDashboardProduct(
       id: 'preview-new-product',
       name_ar: String(payload.nameAr ?? 'منتج جديد'),
       sku: String(payload.sku ?? 'PREVIEW-001'),
-      channel: String(payload.channel ?? 'BOTH'),
-      status: String(payload.status ?? 'DRAFT'),
+      channel: String(payload.channel ?? 'B2C'),
+      status: String(payload.availability ?? 'AVAILABLE') === 'AVAILABLE' ? 'ACTIVE' : 'INACTIVE',
       availability: String(payload.availability ?? 'AVAILABLE'),
     }
     return result
@@ -388,12 +388,14 @@ export async function previewDashboardProductImport(
       const errors: string[] = []
       if (!row.sku?.trim()) errors.push('SKU مطلوب')
       if (!row.nameAr?.trim()) errors.push('اسم المنتج مطلوب')
-      if (!['B2C', 'B2B', 'BOTH'].includes(String(row.channel).toUpperCase())) errors.push('القناة غير صحيحة')
+      if (!['B2C', 'B2B'].includes(String(row.channel).toUpperCase())) errors.push('اختر قناة واحدة: B2C أو B2B')
+      if (!['AVAILABLE', 'UNAVAILABLE'].includes(String(row.availability ?? 'AVAILABLE').toUpperCase())) errors.push('التوفر يجب أن يكون متاحاً أو غير متاح')
       return {
         row: index + 1,
         sku: row.sku?.trim().toUpperCase() ?? '',
         nameAr: row.nameAr?.trim() ?? '',
         channel: String(row.channel ?? '').toUpperCase(),
+        availability: String(row.availability ?? 'AVAILABLE').toUpperCase(),
         action: 'CREATE' as const,
         productId: null,
         valid: errors.length === 0,

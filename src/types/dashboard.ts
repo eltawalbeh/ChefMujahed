@@ -138,6 +138,7 @@ export type DashboardProductImportPreviewRow = {
   sku: string
   nameAr: string
   channel: string
+  availability: string
   action: 'CREATE' | 'UPDATE'
   productId?: string | null
   valid: boolean

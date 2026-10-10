@@ -6,7 +6,7 @@ import { useSitePage } from '@/hooks/useSitePage'
 
 type AboutCard = { title?: string; body?: string }
 type FeedItem = { imageUrl?: string; postUrl?: string; alt?: string }
-type ProfilePin = { mode: 'flow' | 'pinned' | 'complete'; left: number; top: number; width: number }
+type ProfilePin = { mode: 'flow' | 'pinned' | 'releasing'; left: number; top: number; width: number }
 
 function instagramEmbedUrl(url?: string) {
   if (!url) return null
@@ -73,9 +73,9 @@ export default function AboutPage() {
         const pinTop = Math.max(20, Math.floor((window.innerHeight - card.offsetHeight) / 2))
         const next: ProfilePin = sectionTop > pinTop
           ? { mode: 'flow', left: 0, top: pinTop, width: slotRect.width }
-          : contentBottom > pinTop
+          : contentBottom > pinTop + card.offsetHeight
             ? { mode: 'pinned', left: slotRect.left, top: pinTop, width: slotRect.width }
-            : { mode: 'complete', left: 0, top: pinTop, width: slotRect.width }
+            : { mode: 'releasing', left: slotRect.left, top: contentBottom - card.offsetHeight, width: slotRect.width }
         setProfilePin((current) => current.mode === next.mode && current.left === next.left && current.top === next.top && current.width === next.width ? current : next)
       })
     }
@@ -117,7 +117,7 @@ export default function AboutPage() {
       <section ref={storySectionRef} className="bg-[var(--color-bg)] py-12 md:py-20">
         <div className="mx-auto grid max-w-[1140px] gap-8 px-5 md:px-16 lg:grid-cols-[355px_minmax(0,1fr)]" dir="ltr">
           <div ref={profileSlotRef} className="relative min-h-[1px]">
-            <aside ref={profileCardRef} className="overflow-hidden rounded-[24px] bg-white text-center shadow-sm" style={profilePin.mode === 'pinned' ? { position: 'fixed', zIndex: 20, top: profilePin.top, left: profilePin.left, width: profilePin.width } : profilePin.mode === 'complete' ? { position: 'absolute', bottom: 0, left: 0, width: '100%' } : undefined}>
+            <aside ref={profileCardRef} className="overflow-hidden rounded-[24px] bg-white text-center shadow-sm" style={profilePin.mode === 'pinned' || profilePin.mode === 'releasing' ? { position: 'fixed', zIndex: 20, top: profilePin.top, left: profilePin.left, width: profilePin.width } : undefined}>
               <div className="aspect-[355/194] overflow-hidden bg-[var(--color-bg)]">
                 {chefImage ? <img src={chefImage} alt="الشيف مجاهد" className="h-full w-full object-cover object-center" /> : <div className="h-full w-full bg-[linear-gradient(145deg,#50382a,#ad8060)]" />}
               </div>

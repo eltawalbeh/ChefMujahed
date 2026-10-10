@@ -118,8 +118,8 @@ export default function AboutPage() {
         <div className="mx-auto grid max-w-[1140px] gap-8 px-5 md:px-16 lg:grid-cols-[355px_minmax(0,1fr)]" dir="ltr">
           <div ref={profileSlotRef} className="relative min-h-[1px]">
             <aside ref={profileCardRef} className="overflow-hidden rounded-[24px] bg-white text-center shadow-sm" style={profilePin.mode === 'pinned' ? { position: 'fixed', zIndex: 20, top: profilePin.top, left: profilePin.left, width: profilePin.width } : profilePin.mode === 'complete' ? { position: 'absolute', bottom: 0, left: 0, width: '100%' } : undefined}>
-              <div className="h-[410px] bg-[var(--color-bg)] sm:h-[500px] lg:h-[560px]">
-                {chefImage ? <img src={chefImage} alt="الشيف مجاهد" className="h-full w-full object-cover" /> : <div className="h-full w-full bg-[linear-gradient(145deg,#50382a,#ad8060)]" />}
+              <div className="aspect-[355/194] overflow-hidden bg-[var(--color-bg)]">
+                {chefImage ? <img src={chefImage} alt="الشيف مجاهد" className="h-full w-full object-cover object-center" /> : <div className="h-full w-full bg-[linear-gradient(145deg,#50382a,#ad8060)]" />}
               </div>
               <div className="px-6 py-7"><h2 className="text-2xl font-bold">{content.chefName || 'الشيف مجاهد'}</h2><div className="mt-5 flex justify-center gap-3"><SocialLink href={content.snapchatUrl} label="سناب شات"><SnapchatLogo size={20} /></SocialLink><SocialLink href={content.facebookUrl} label="فيسبوك"><FacebookLogo size={20} /></SocialLink><SocialLink href={content.instagramUrl} label="إنستجرام"><InstagramLogo size={20} /></SocialLink></div>{content.whatsappUrl ? <a href={content.whatsappUrl} target="_blank" rel="noreferrer" className="mt-6 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 text-sm font-bold !text-white shadow-sm transition hover:bg-[#1fae56] [&_svg]:!text-white"><WhatsappLogo size={19} weight="fill" />تواصل عبر واتساب</a> : null}</div>
             </aside>

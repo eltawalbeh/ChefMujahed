@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { FacebookLogo, InstagramLogo, SnapchatLogo, WhatsappLogo } from '@phosphor-icons/react'
 import PublicHeader from '@/components/public/PublicHeader'
 import PublicFooter from '@/components/public/PublicFooter'
@@ -14,6 +14,22 @@ function instagramEmbedUrl(url?: string) {
     const match = new URL(url).pathname.match(/^\/(p|reel|tv)\/([^/?#]+)/)
     return match ? `https://www.instagram.com/${match[1]}/${match[2]}/embed/captioned/` : null
   } catch { return null }
+}
+
+function instagramMediaUrl(url?: string) {
+  if (!url) return null
+  try {
+    const match = new URL(url).pathname.match(/^\/(p|reel|tv)\/([^/?#]+)/)
+    return match ? `https://www.instagram.com/${match[1]}/${match[2]}/media/?size=l` : null
+  } catch { return null }
+}
+
+function InstagramFeedCard({ item, index, profileUrl }: { item: FeedItem; index: number; profileUrl?: string }) {
+  const [thumbnailUnavailable, setThumbnailUnavailable] = useState(false)
+  const embedUrl = instagramEmbedUrl(item.postUrl)
+  const thumbnailUrl = instagramMediaUrl(item.postUrl)
+  const href = item.postUrl || item.imageUrl || profileUrl || '#'
+  return <a href={href} target={href !== '#' ? '_blank' : undefined} rel="noreferrer" className="relative block w-[210px] shrink-0 snap-start overflow-hidden rounded-2xl bg-white shadow-sm sm:w-[245px]" aria-label={item.alt || 'فتح منشور إنستجرام'}>{thumbnailUrl && !thumbnailUnavailable ? <img src={thumbnailUrl} alt={item.alt || 'من يوميات مطبخ الشيف مجاهد'} onError={() => setThumbnailUnavailable(true)} className="aspect-[.78] w-full object-cover" /> : embedUrl ? <iframe src={embedUrl} title={item.alt || `منشور إنستجرام ${index + 1}`} loading="lazy" className="pointer-events-none aspect-[.78] w-full border-0" /> : <img src={item.imageUrl} alt={item.alt || 'من يوميات مطبخ الشيف مجاهد'} className="aspect-[.78] w-full object-cover" />}</a>
 }
 
 function SocialLink({ href, label, children }: { href?: string; label: string; children: ReactNode }) {
@@ -51,13 +67,13 @@ export default function AboutPage() {
       <section className="border-b border-[var(--color-border)] bg-[var(--color-bg)] py-10 md:py-14" aria-label="من يوميات المطبخ">
         <div className="mx-auto max-w-[1440px] px-5 md:px-16">
           <div className="mb-5 flex items-end justify-between gap-4"><div className="text-right"><p className="text-sm font-semibold text-[var(--color-accent)]">من يوميات المطبخ</p><h2 className="mt-2 text-2xl font-bold">أحدث التفاصيل</h2></div>{content.instagramUrl ? <a href={content.instagramUrl} target="_blank" rel="noreferrer" className="text-sm font-semibold underline underline-offset-4">تابعنا على إنستجرام</a> : null}</div>
-          {feed.length ? <div className="flex snap-x gap-4 overflow-x-auto pb-2 [scrollbar-width:thin]" dir="ltr">{feed.map((item, index) => { const embedUrl = instagramEmbedUrl(item.postUrl); return <a key={index} href={item.postUrl || item.imageUrl || content.instagramUrl || '#'} target={item.postUrl || item.imageUrl || content.instagramUrl ? '_blank' : undefined} rel="noreferrer" className="relative block w-[210px] shrink-0 snap-start overflow-hidden rounded-2xl bg-white shadow-sm sm:w-[245px]" aria-label={item.alt || 'فتح منشور إنستجرام'}>{embedUrl ? <iframe src={embedUrl} title={item.alt || `منشور إنستجرام ${index + 1}`} loading="lazy" className="pointer-events-none aspect-[.78] w-full border-0" /> : <img src={item.imageUrl} alt={item.alt || 'من يوميات مطبخ الشيف مجاهد'} className="aspect-[.78] w-full object-cover" />}</a>})}</div> : <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">{[0, 1, 2, 3, 4].map((item) => <div key={item} className="aspect-[.78] rounded-2xl bg-[linear-gradient(135deg,#eee5db,#d8c2af)]" />)}</div>}
+          {feed.length ? <div className="flex snap-x gap-4 overflow-x-auto pb-2 [scrollbar-width:thin]" dir="ltr">{feed.map((item, index) => <InstagramFeedCard key={`${item.postUrl}-${index}`} item={item} index={index} profileUrl={content.instagramUrl} />)}</div> : <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">{[0, 1, 2, 3, 4].map((item) => <div key={item} className="aspect-[.78] rounded-2xl bg-[linear-gradient(135deg,#eee5db,#d8c2af)]" />)}</div>}
         </div>
       </section>
 
       <section className="bg-[var(--color-bg)] py-12 md:py-20">
         <div className="mx-auto grid max-w-[1140px] gap-8 px-5 md:px-16 lg:grid-cols-[355px_minmax(0,1fr)]" dir="ltr">
-          <aside className="self-start overflow-hidden rounded-[24px] bg-white text-center shadow-sm lg:sticky lg:top-24">
+          <aside className="self-start overflow-hidden rounded-[24px] bg-white text-center shadow-sm md:sticky md:top-24">
             <div className="h-[410px] bg-[var(--color-bg)] sm:h-[500px] lg:h-[560px]">
               {chefImage ? <img src={chefImage} alt="الشيف مجاهد" className="h-full w-full object-cover" /> : <div className="h-full w-full bg-[linear-gradient(145deg,#50382a,#ad8060)]" />}
             </div>

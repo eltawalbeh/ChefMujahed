@@ -12,7 +12,7 @@ import { canManageContent } from '@/lib/dashboardPermissions'
 import type { SitePageKey } from '@/content/defaultSiteContent'
 
 type CmsLocale = 'ar' | 'en'
-type FieldKind = 'text' | 'textarea' | 'url' | 'image' | 'heroImages' | 'imageList'
+type FieldKind = 'text' | 'textarea' | 'url' | 'image' | 'heroImages'
 type Field = {
   key: string
   label: string
@@ -90,7 +90,7 @@ const pageSchema: Record<SitePageKey, { fields: Field[]; repeaters?: Repeater[] 
       { key: 'title', label: 'العنوان الرئيسي', kind: 'textarea' },
       { key: 'intro', label: 'المقدمة', kind: 'textarea' },
       { key: 'heroImageUrl', label: 'صورة صفحة من نحن', kind: 'image', imageSize: '1200 × 900 px · 4:3', imageHelp: 'صورة حقيقية تعبّر عن الشيف أو الحرفية أو بيئة العمل.' },
-      { key: 'chefImages', label: 'صور الشيف في البطاقة', kind: 'imageList', imageSize: '900 × 1200 px · 3:4', imageHelp: 'ارفع حتى ثلاث صور عمودية. تظهر ككولاج في بطاقة الشيف.' },
+      { key: 'chefImageUrl', label: 'صورة الشيف في البطاقة', kind: 'image', imageSize: '900 × 1200 px · 3:4', imageHelp: 'ارفع صورة واحدة عمودية. تبقى البطاقة ثابتة بجانب القصة أثناء التمرير على الديسكتوب.' },
       { key: 'chefName', label: 'اسم الشيف' },
       { key: 'instagramUrl', label: 'رابط إنستجرام الشيف', kind: 'url' },
       { key: 'facebookUrl', label: 'رابط فيسبوك الشيف', kind: 'url' },
@@ -103,8 +103,8 @@ const pageSchema: Record<SitePageKey, { fields: Field[]; repeaters?: Repeater[] 
         itemFields: [{ key: 'title', label: 'العنوان' }, { key: 'body', label: 'المحتوى', kind: 'textarea' }],
       },
       {
-        key: 'instagramFeed', label: 'صور يوميات المطبخ', addLabel: 'إضافة صورة',
-        itemFields: [{ key: 'imageUrl', label: 'رابط الصورة', kind: 'url' }, { key: 'postUrl', label: 'رابط منشور إنستجرام (اختياري)', kind: 'url' }, { key: 'alt', label: 'وصف الصورة' }],
+        key: 'instagramFeed', label: 'Feed إنستجرام', addLabel: 'إضافة منشور',
+        itemFields: [{ key: 'postUrl', label: 'رابط منشور أو Reel من إنستجرام', kind: 'url' }, { key: 'alt', label: 'وصف مختصر للمنشور' }],
       },
     ],
   },
@@ -342,29 +342,6 @@ export default function ContentManagementPage() {
                         setSaved(false)
                       }}
                       storagePath={`cms/${selected}/hero`}
-                      disabled={runtime.mode === 'preview'}
-                    />
-                  )
-                }
-
-                if (field.kind === 'imageList') {
-                  return (
-                    <HeroImageSlotsField
-                      key={field.key}
-                      values={Array.isArray(contentPair.ar[field.key]) ? contentPair.ar[field.key] : []}
-                      onChange={(values) => {
-                        const pair = {
-                          ar: { ...contentPair.ar, [field.key]: values },
-                          en: { ...contentPair.en, [field.key]: values },
-                        }
-                        contentCache.set(selected, pair)
-                        setContentPair(pair)
-                        setSaved(false)
-                      }}
-                      storagePath={`cms/${selected}/${field.key}`}
-                      title={field.label}
-                      help={field.imageHelp}
-                      recommendedSize={field.imageSize}
                       disabled={runtime.mode === 'preview'}
                     />
                   )

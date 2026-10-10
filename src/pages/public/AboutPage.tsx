@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import { useState, type ReactNode } from 'react'
 import { FacebookLogo, InstagramLogo, SnapchatLogo, WhatsappLogo } from '@phosphor-icons/react'
 import PublicHeader from '@/components/public/PublicHeader'
@@ -72,17 +71,18 @@ export default function AboutPage() {
       </section>
 
       <section className="bg-[var(--color-bg)] py-12 md:py-20">
-        <div className="mx-auto grid max-w-[1140px] gap-8 px-5 md:px-16 lg:grid-cols-[355px_minmax(0,1fr)]" dir="ltr">
-          <aside className="self-start overflow-hidden rounded-[24px] bg-white text-center shadow-sm md:sticky md:top-24">
-            <div className="h-[410px] bg-[var(--color-bg)] sm:h-[500px] lg:h-[560px]">
-              {chefImage ? <img src={chefImage} alt="الشيف مجاهد" className="h-full w-full object-cover" /> : <div className="h-full w-full bg-[linear-gradient(145deg,#50382a,#ad8060)]" />}
-            </div>
-            <div className="px-6 py-7"><h2 className="text-2xl font-bold">{content.chefName || 'الشيف مجاهد'}</h2><div className="mt-5 flex justify-center gap-3"><SocialLink href={content.snapchatUrl} label="سناب شات"><SnapchatLogo size={20} /></SocialLink><SocialLink href={content.facebookUrl} label="فيسبوك"><FacebookLogo size={20} /></SocialLink><SocialLink href={content.instagramUrl} label="إنستجرام"><InstagramLogo size={20} /></SocialLink></div>{content.whatsappUrl ? <a href={content.whatsappUrl} target="_blank" rel="noreferrer" className="mt-6 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[var(--color-text)] px-4 text-sm font-semibold text-white"><WhatsappLogo size={19} weight="fill" />تواصل عبر واتساب</a> : null}</div>
-          </aside>
+        <div className="mx-auto grid max-w-[1140px] items-start gap-8 px-5 md:px-16 lg:grid-cols-[355px_minmax(0,1fr)]" dir="ltr">
+          <div className="lg:sticky lg:top-6 lg:self-start">
+            <aside className="overflow-hidden rounded-[24px] bg-white text-center shadow-sm">
+              <div className="h-[410px] bg-[var(--color-bg)] sm:h-[500px] lg:h-[560px]">
+                {chefImage ? <img src={chefImage} alt="الشيف مجاهد" className="h-full w-full object-cover" /> : <div className="h-full w-full bg-[linear-gradient(145deg,#50382a,#ad8060)]" />}
+              </div>
+              <div className="px-6 py-7"><h2 className="text-2xl font-bold">{content.chefName || 'الشيف مجاهد'}</h2><div className="mt-5 flex justify-center gap-3"><SocialLink href={content.snapchatUrl} label="سناب شات"><SnapchatLogo size={20} /></SocialLink><SocialLink href={content.facebookUrl} label="فيسبوك"><FacebookLogo size={20} /></SocialLink><SocialLink href={content.instagramUrl} label="إنستجرام"><InstagramLogo size={20} /></SocialLink></div>{content.whatsappUrl ? <a href={content.whatsappUrl} target="_blank" rel="noreferrer" className="mt-6 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 text-sm font-bold text-white shadow-sm transition hover:bg-[#1fae56]"><WhatsappLogo size={19} weight="fill" />تواصل عبر واتساب</a> : null}</div>
+            </aside>
+          </div>
 
           <div className="space-y-5 text-right" dir="rtl">
             {[story, philosophy, craft].filter((card) => card.title || card.body).map((card, index) => <article key={index} className="rounded-[22px] border border-[var(--color-border)] bg-white px-6 py-7 md:px-9 md:py-9"><h2 className="text-2xl font-bold md:text-3xl">{card.title}</h2><p className="mt-5 whitespace-pre-line text-[15px] leading-8 text-[var(--color-text-muted)] md:text-base">{card.body}</p></article>)}
-            <div className="flex justify-start pt-2"><Link to="/products" className="inline-flex min-h-12 items-center rounded-xl bg-[var(--color-text)] px-5 text-sm font-semibold text-white">استكشف قائمتنا</Link></div>
           </div>
         </div>
       </section>

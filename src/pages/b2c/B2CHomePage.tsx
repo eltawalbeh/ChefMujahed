@@ -16,6 +16,7 @@ export default function B2CHomePage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [heroVideoFailed, setHeroVideoFailed] = useState(false)
 
   const load = useCallback(async () => {
     try { setLoading(true); setError(''); setProducts((await getPublicProducts()).slice(0, 4)) }
@@ -30,7 +31,22 @@ export default function B2CHomePage() {
       <main>
 
         {/* ── Hero ───────────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden border-b border-[var(--color-border)] bg-[var(--color-surface)]">
+        {content.heroVideoUrl && !heroVideoFailed ? <section className="relative isolate min-h-[560px] overflow-hidden border-b border-[var(--color-border)] bg-[#26170f] text-white md:min-h-[530px]">
+          <video className="absolute inset-0 -z-20 h-full w-full object-cover" src={content.heroVideoUrl} poster={content.heroPosterUrl || content.heroImageUrl || content.heroImages?.[0] || undefined} autoPlay muted loop playsInline preload="metadata" aria-hidden="true" onError={() => setHeroVideoFailed(true)} />
+          <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(27,15,9,.08)_0%,rgba(27,15,9,.35)_36%,rgba(27,15,9,.86)_100%)]" />
+          <div className="relative mx-auto flex min-h-[560px] max-w-[1440px] items-center px-5 py-16 md:min-h-[530px] md:px-16" dir="rtl">
+            <div className="max-w-[650px] text-right">
+              <p className="text-sm font-semibold text-[#f4c78b] anim-slide-right" style={{ animationDelay: '80ms' }}>{content.eyebrow}</p>
+              <h1 className="mt-4 text-[38px] font-bold leading-[1.25] md:text-[46px] anim-slide-right" style={{ animationDelay: '170ms' }}>{content.title}</h1>
+              <p className="mt-6 max-w-[600px] text-base leading-8 text-white/85 md:text-lg anim-slide-right" style={{ animationDelay: '260ms' }}>{content.description}</p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-start anim-slide-up" style={{ animationDelay: '360ms' }}>
+                <Link to="/products" className="inline-flex h-12 items-center justify-center rounded-xl bg-white px-7 font-semibold !text-[#2E1E17] shadow-sm transition-colors hover:bg-[#F7F0E8]">{content.primaryCtaLabel}</Link>
+                <Link to="/business" className="inline-flex h-12 items-center justify-center rounded-xl border border-white/50 bg-white/10 px-7 font-semibold !text-white backdrop-blur-sm transition-colors hover:bg-white/20">{content.secondaryCtaLabel}</Link>
+              </div>
+              <p className="mt-5 text-xs leading-6 text-white/70 anim-slide-up" style={{ animationDelay: '440ms' }}>تسجيل الطلب لا يعني تأكيده؛ تتم مراجعة التفاصيل والتواصل معك قبل بدء التجهيز.</p>
+            </div>
+          </div>
+        </section> : <section className="relative overflow-hidden border-b border-[var(--color-border)] bg-[var(--color-surface)]">
           <div
             className="mx-auto grid min-h-[620px] max-w-[1440px] items-center gap-10 px-4 py-14 md:px-16 lg:grid-cols-[1fr_0.82fr] lg:py-20"
             dir="ltr"
@@ -93,7 +109,7 @@ export default function B2CHomePage() {
               </p>
             </div>
           </div>
-        </section>
+        </section>}
 
         {/* ── Featured products ───────────────────────────────────────── */}
         <section className="mx-auto max-w-[1440px] px-4 py-14 md:px-16 md:py-20">

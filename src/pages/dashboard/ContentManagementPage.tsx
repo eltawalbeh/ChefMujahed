@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import Button from '@/components/ui/Button'
 import ImageUploadField from '@/components/dashboard/ImageUploadField'
 import HeroImageSlotsField from '@/components/dashboard/HeroImageSlotsField'
+import VideoUploadField from '@/components/dashboard/VideoUploadField'
 import { DashboardError, DashboardLoading, DashboardRestricted } from '@/components/dashboard/DashboardStates'
 import { getDashboardSitePage, updateDashboardSitePage } from '@/data/dashboard'
 import { useDashboard } from '@/state/DashboardContext'
@@ -12,7 +13,7 @@ import { canManageContent } from '@/lib/dashboardPermissions'
 import type { SitePageKey } from '@/content/defaultSiteContent'
 
 type CmsLocale = 'ar' | 'en'
-type FieldKind = 'text' | 'textarea' | 'url' | 'image' | 'heroImages'
+type FieldKind = 'text' | 'textarea' | 'url' | 'image' | 'video' | 'heroImages'
 type Field = {
   key: string
   label: string
@@ -46,7 +47,9 @@ const pageSchema: Record<SitePageKey, { fields: Field[]; repeaters?: Repeater[] 
       { key: 'eyebrow', label: 'النص فوق العنوان' },
       { key: 'title', label: 'عنوان الـ Hero', kind: 'textarea' },
       { key: 'description', label: 'وصف الـ Hero', kind: 'textarea' },
-      { key: 'heroImages', label: 'صور الـ Hero المتحركة', kind: 'heroImages', imageSize: '1400 × 1200 px · 7:6', imageHelp: 'ارفع من صورة واحدة إلى ثلاث صور؛ الصور اختيارية بعد الصورة الأولى.' },
+      { key: 'heroVideoUrl', label: 'فيديو الـ Hero', kind: 'video' },
+      { key: 'heroPosterUrl', label: 'صورة احتياطية للفيديو', kind: 'image', imageSize: '1920 × 1080 px · 16:9', imageHelp: 'تظهر فوراً قبل تحميل الفيديو أو عند عدم تشغيله. استخدم لقطة واضحة من الفيديو.' },
+      { key: 'heroImages', label: 'صور Hero الاحتياطية', kind: 'heroImages', imageSize: '1400 × 1200 px · 7:6', imageHelp: 'تظهر فقط عند عدم وجود فيديو Hero؛ ارفع من صورة واحدة إلى ثلاث صور.' },
       { key: 'primaryCtaLabel', label: 'نص الزر الرئيسي' },
       { key: 'secondaryCtaLabel', label: 'نص زر الشركات' },
       { key: 'processEyebrow', label: 'عنوان صغير لقسم كيف يعمل الطلب' },
@@ -360,6 +363,9 @@ export default function ContentManagementPage() {
                       disabled={runtime.mode === 'preview'}
                     />
                   )
+                }
+                if (field.kind === 'video') {
+                  return <VideoUploadField key={field.key} label={field.label} value={contentPair.ar[field.key] ?? contentPair.en[field.key] ?? ''} onChange={(value) => setSharedImage(field.key, value)} storagePath={`cms/${selected}/${field.key}`} disabled={runtime.mode === 'preview'} />
                 }
                 return (
                   <EditorField

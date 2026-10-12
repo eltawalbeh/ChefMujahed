@@ -17,6 +17,8 @@ export const defaultSiteContent: Record<SitePageKey, Record<string, any>> = {
     secondaryCtaLabel: 'طلبات الشركات',
     heroImages: [],
     heroImageUrl: '',
+    heroVideoUrl: '',
+    heroPosterUrl: '',
     processEyebrow: 'كيف يعمل الطلب؟',
     processTitle: 'بسيط من جهتك، منظم من جهتنا',
     steps: [
@@ -109,6 +111,8 @@ export const defaultSiteContentEn: Record<SitePageKey, Record<string, any>> = {
     secondaryCtaLabel: 'Business requests',
     heroImages: [],
     heroImageUrl: '',
+    heroVideoUrl: '',
+    heroPosterUrl: '',
     processEyebrow: 'How requests work',
     processTitle: 'Simple for you, organized for us',
     steps: [

@@ -1,20 +1,9 @@
 import { DragEvent, useRef, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { uploadDashboardMedia } from '@/lib/mediaUpload'
 
-type Props = {
-  label: string
-  value: string
-  onChange: (value: string) => void
-  storagePath: string
-  disabled?: boolean
-}
-
+type Props = { label: string; value: string; onChange: (value: string) => void; storagePath: string; disabled?: boolean }
 const ACCEPT = ['video/mp4', 'video/webm']
 const MAX_SIZE = 25 * 1024 * 1024
-
-function extension(file: File) {
-  return file.type === 'video/webm' ? 'webm' : 'mp4'
-}
 
 export default function VideoUploadField({ label, value, onChange, storagePath, disabled = false }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null)
@@ -28,19 +17,13 @@ export default function VideoUploadField({ label, value, onChange, storagePath, 
     if (file.size > MAX_SIZE) return setError('حجم الفيديو يجب ألا يتجاوز 25 MB.')
     try {
       setUploading(true)
-      const path = `${storagePath}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${extension(file)}`.replace(/\/+/g, '/')
-      const { error: uploadError } = await supabase.storage.from('site-content').upload(path, file, { cacheControl: '31536000', upsert: false, contentType: file.type })
-      if (uploadError) throw uploadError
-      const { data } = supabase.storage.from('site-content').getPublicUrl(path)
-      onChange(data.publicUrl)
+      onChange(await uploadDashboardMedia(file, storagePath))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'تعذر رفع الفيديو. حاول مرة أخرى.')
     } finally { setUploading(false) }
   }
-
   const onDrop = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault()
-    setDragging(false)
+    event.preventDefault(); setDragging(false)
     const file = event.dataTransfer.files?.[0]
     if (file) void upload(file)
   }

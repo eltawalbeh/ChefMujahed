@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { ArrowUpLeft } from '@phosphor-icons/react'
 import {
   addDashboardRequestNote, getDashboardRequest, linkDashboardRequestCustomer,
   updateDashboardItemDiscount, updateDashboardOrderDiscount, updateDashboardPayment,
@@ -20,6 +21,23 @@ import Button from '@/components/ui/Button'
 import { buildPaymentRequestMessage, buildWhatsAppUrl } from '@/lib/whatsapp'
 
 type Tab = 'work' | 'billing' | 'history'
+// Non-primary action: understated at rest, tactile on hover, focus and press.
+function InlineAction({ children, onClick, disabled = false, busy = false }: {
+  children: ReactNode
+  onClick: () => void
+  disabled?: boolean
+  busy?: boolean
+}) {
+  return <button
+    type="button"
+    onClick={onClick}
+    disabled={disabled || busy}
+    className="group -me-2 inline-flex min-h-11 max-w-full cursor-pointer items-center gap-2 rounded-lg border border-transparent px-2.5 py-2 text-right text-sm font-semibold text-[#6B4938] underline decoration-[#6B4938]/35 underline-offset-4 transition-[background-color,border-color,color,transform,text-decoration-color] duration-150 hover:-translate-y-0.5 hover:border-[#E1C9A7] hover:bg-[#F6EADD] hover:text-[#2E1E17] hover:decoration-current focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] active:translate-y-0 active:bg-[#EED9C1] disabled:cursor-not-allowed disabled:opacity-50 disabled:no-underline disabled:hover:translate-y-0"
+  >
+    <span>{children}</span>
+    <ArrowUpLeft aria-hidden="true" size={16} className="shrink-0 transition-transform duration-150 group-hover:-translate-x-0.5 group-hover:-translate-y-0.5" />
+  </button>
+}
 function Section({title,children,highlight=false}:{title:string;children:ReactNode;highlight?:boolean}) {
   return <section className={'rounded-2xl border p-4 md:p-6 '+(highlight?'border-[#D4AC68] bg-[#FFF7E7] shadow-[0_8px_24px_rgba(130,92,36,.10)]':'border-[var(--color-border)] bg-[var(--color-surface)]')}><h2 className="text-base font-bold">{title}</h2><div className="mt-4">{children}</div></section>
 }
@@ -36,13 +54,14 @@ export default function RequestDetailsPage() {
   const [feedback,setFeedback]=useState('')
   const [note,setNote]=useState('')
   const [tab,setTab]=useState<Tab>('work')
+  const tabsRef=useRef<HTMLDivElement>(null)
   const contact=useSitePage<{paymentInstructions?:string}>('contact')
   const load=useCallback(async()=>{try{setLoadingError(false);setData(await getDashboardRequest(runtime,id))}catch{setLoadingError(true)}},[runtime,id])
   useEffect(()=>{void load()},[load])
   const total=useMemo(()=>Number(data?.request.final_total_jod || data?.request.estimated_subtotal || 0),[data])
-  const mutate=async (operation:()=>Promise<DashboardRequestDetail>)=>{
+  const mutate=async (operation:()=>Promise<DashboardRequestDetail>, successMessage='تم حفظ التغييرات بنجاح')=>{
     setSaving(true);setFeedback('')
-    try {const next=await operation();setData(next);setFeedback('تم حفظ التغييرات بنجاح')}
+    try {const next=await operation();setData(next);setFeedback(successMessage)}
     catch(err:any){const message=String(err?.message??'تعذر حفظ التغييرات');if(message.toLowerCase().includes('permission'))setRestricted(true);setFeedback(message);throw err}
     finally{setSaving(false)}
   }
@@ -55,6 +74,19 @@ export default function RequestDetailsPage() {
   const pending=['NEW','CONTACT_REQUIRED','AWAITING_CONFIRMATION'].includes(request.status)
   const editable=canManagePricing(role)&&!request.invoice_issued_at&&!['CANCELLED','COMPLETED','PREPARING','READY','OUT_FOR_DELIVERY'].includes(request.status)
   const currentDiscount=Number(request.discount_total_jod??request.discount_amount_jod??0)
+  const openBilling=()=>{
+    setTab('billing')
+    // Intentional navigation to the pricing section (ordinary tab switches do not scroll).
+    tabsRef.current?.scrollIntoView({ behavior:'smooth', block:'start' })
+    document.getElementById('request-billing-tab')?.focus({ preventScroll:true })
+  }
+  const convertToPersonal=()=>{
+    if (!window.confirm('تحويل هذا الطلب من شركة B2B إلى طلب شخصي B2C؟ تأكد من نوع الطلب قبل المتابعة.')) return
+    void mutate(
+      ()=>markDashboardRequestPersonal(runtime,id),
+      'تم تحويل الطلب إلى طلب شخصي (B2C) بنجاح.'
+    ).catch(()=>{})
+  }
   const sendPaymentMessage=()=>{
     if(!request.customer_phone_snapshot||!contact.paymentInstructions?.trim()){setFeedback('رقم الهاتف أو تعليمات الدفع غير متوفرة. راجع معلومات التواصل في المحتوى.');return}
     const msg=buildPaymentRequestMessage({reference:request.reference,customerName:name,totalJod:total,instructions:contact.paymentInstructions.trim()})
@@ -79,8 +111,8 @@ export default function RequestDetailsPage() {
       </div>
     </header>
     {feedback?<p role="status" aria-live="polite" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm">{feedback}</p>:null}
-    <div role="tablist" aria-label="أقسام الطلب" className="flex gap-2 overflow-x-auto border-b border-[var(--color-border)] bg-[var(--color-bg)]">
-      {([['work','متابعة الطلب'],['billing','التسعير والفاتورة'],['history','الملاحظات والسجل']] as const).map(([key,label])=><button key={key} type="button" role="tab" aria-selected={tab===key} onClick={()=>setTab(key)} className={'shrink-0 border-b-2 px-3 py-3 text-sm '+(tab===key?'border-[var(--color-text)] font-bold':'border-transparent text-[var(--color-text-muted)]')}>{label}</button>)}
+    <div ref={tabsRef} role="tablist" aria-label="أقسام الطلب" className="flex scroll-mt-24 gap-2 overflow-x-auto border-b border-[var(--color-border)] bg-[var(--color-bg)]">
+      {([['work','متابعة الطلب'],['billing','التسعير والفاتورة'],['history','الملاحظات والسجل']] as const).map(([key,label])=><button id={'request-'+key+'-tab'} key={key} type="button" role="tab" aria-selected={tab===key} onClick={()=>setTab(key)} className={'shrink-0 border-b-2 px-3 py-3 text-sm '+(tab===key?'border-[var(--color-text)] font-bold':'border-transparent text-[var(--color-text-muted)]')}>{label}</button>)}
     </div>
     <div className="min-h-[850px] md:min-h-[1000px]">
     {tab==='work'?<div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_350px]">
@@ -91,7 +123,7 @@ export default function RequestDetailsPage() {
           {data.possibleCustomers.length>0?<div className="mt-4 rounded-xl bg-[var(--color-bg)] p-3"><strong className="text-sm">عميل مسجل محتمل</strong>
             {data.possibleCustomers.slice(0,3).map(c=><div key={c.id} className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm"><span>{c.company_name||c.name} · {c.match_reason}</span>{canLinkCustomers(role)?<Button size="sm" variant="secondary" disabled={saving} onClick={()=>void mutate(()=>linkDashboardRequestCustomer(runtime,id,c.id)).catch(()=>{})}>ربط السجل</Button>:null}</div>)}
           </div>:null}
-          {b2b&&request.source==='WEBSITE'?<button type="button" className="mt-3 text-xs underline" disabled={saving} onClick={()=>void mutate(()=>markDashboardRequestPersonal(runtime,id)).catch(()=>{})}>تحويل إلى طلب شخصي</button>:null}
+          {b2b&&request.source==='WEBSITE'?<div className="mt-2"><InlineAction disabled={saving} busy={saving} onClick={convertToPersonal}>{saving?'جاري التحديث...':'تحويل إلى طلب شخصي'}</InlineAction></div>:null}
         </Section>
         <Section title={'المنتجات · '+data.items.length}>
           <div className="divide-y divide-[var(--color-border)]">
@@ -115,7 +147,7 @@ export default function RequestDetailsPage() {
           <div className="space-y-2 text-sm"><div className="flex justify-between"><span>{formatJod(Number(request.estimated_subtotal??0))}</span><span>المنتجات</span></div>
           <div className="flex justify-between"><span>- {formatJod(currentDiscount)}</span><span>الخصومات</span></div>
           <div className="flex justify-between border-t border-[var(--color-border)] pt-2 font-bold"><span>{formatJod(total)}</span><span>الإجمالي</span></div></div>
-          <button type="button" className="mt-4 text-sm font-semibold underline" onClick={()=>setTab('billing')}>تعديل الخصومات وعرض الفاتورة</button>
+          <div className="mt-3"><InlineAction onClick={openBilling}>تعديل الخصومات وعرض الفاتورة</InlineAction></div>
         </Section>
       </div>
     </div>:null}

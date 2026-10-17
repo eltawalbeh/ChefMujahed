@@ -66,15 +66,15 @@ export default function NotificationsPage() {
       {notifications.length ? (
         <section className="space-y-3">
           {notifications.map((item) => (
-            <article key={item.id} className="flex flex-col gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 text-right sm:flex-row sm:items-center sm:justify-between" dir="rtl">
-              <div className="text-right">
-                <div className="flex items-center justify-end gap-2">
+            <article key={item.id} className="flex w-full flex-col gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 text-right sm:flex-row sm:items-center sm:justify-between" dir="rtl">
+              <div className="min-w-0 flex-1 text-right" dir="rtl">
+                <div className="flex items-center justify-start gap-2">
                   <span className={item.tone === 'urgent' ? 'size-2 rounded-full bg-[#C62828]' : item.tone === 'success' ? 'size-2 rounded-full bg-[#2E7D32]' : 'size-2 rounded-full bg-[var(--color-accent)]'} />
                   <h2 className="font-bold">{item.title}</h2>
                 </div>
                 <p className="mt-1 text-sm text-[var(--color-text-muted)]">{item.description}</p>
               </div>
-              <Link to={'/dashboard/requests/' + item.requestId} className="min-h-11 self-start rounded-lg border border-[var(--color-border)] px-4 py-2 text-center text-sm font-semibold outline-none hover:bg-[var(--color-bg)] focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 sm:self-auto">فتح الطلب</Link>
+              <Link to={'/dashboard/requests/' + item.requestId} className="min-h-11 shrink-0 self-start rounded-lg border border-[var(--color-border)] px-4 py-2 text-center text-sm font-semibold outline-none hover:bg-[var(--color-bg)] focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 sm:self-auto">فتح الطلب</Link>
             </article>
           ))}
         </section>

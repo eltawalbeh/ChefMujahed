@@ -276,7 +276,7 @@ export default function ProductDetailPage() {
             </Button>
             {!canAdd ? (
               <p role="alert" className="mt-2 hidden text-center text-xs text-red-700 md:block">
-                أكمل الخيارات الإلزامية واختر وحدة المنتج قبل الإضافة.
+                {!orderableUnits.length ? 'المنتج بحاجة لإعداد وحدة بيع من إدارة المنتجات قبل طلبه إلكترونيًا.' : 'أكمل الخيارات المطلوبة قبل إضافة المنتج.'}
               </p>
             ) : null}
           </div>

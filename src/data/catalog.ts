@@ -158,114 +158,94 @@ const productSelect = `
   )
 `
 
+// Never return a stripped-down product as though its missing images/units are real.
+// Fetch a small product row first, then hydrate images and selling units in parallel.
+const baseSelect = 'id,name_ar,slug,sku,status,availability,channel,base_price_jod,category_id,short_description_ar,long_description_ar,b2b_allow_custom_unit'
+const catalogCache = new Map<string, { expires: number; task: Promise<Product[]> }>()
+const detailCache = new Map<string, { expires: number; task: Promise<Product | null> }>()
+
+function cached<T>(cache: Map<string, { expires: number; task: Promise<T> }>, key: string, ttl: number, get: () => Promise<T>): Promise<T> {
+  const current = cache.get(key)
+  if (current && current.expires > Date.now()) return current.task
+  const task = get()
+  cache.set(key, { expires: Date.now() + ttl, task })
+  void task.catch(() => { if (cache.get(key)?.task === task) cache.delete(key) })
+  return task
+}
+
+async function hydrateProducts(rows: ProductRow[], withCustomization = false): Promise<Product[]> {
+  if (!rows.length) return []
+  const ids = rows.map((row) => row.id)
+  const imageQuery = supabase.from('product_images')
+    .select('product_id,id,image_url,alt_ar,is_primary,sort_order')
+    .in('product_id', ids).eq('is_active', true)
+  const unitQuery = supabase.from('product_units')
+    .select('product_id,id,label_ar,channel,sort_order,price_jod,availability,is_active')
+    .in('product_id', ids).eq('is_active', true)
+  const [images, units, fields] = await Promise.all([
+    imageQuery,
+    unitQuery,
+    withCustomization
+      ? supabase.from('product_customization_fields')
+          .select('product_id,id,label_ar,field_type,is_required,sort_order,product_customization_options(id,label_ar,sort_order,is_active)')
+          .in('product_id', ids).eq('is_active', true)
+      : Promise.resolve({data: [], error: null}),
+  ])
+  if (images.error) throw images.error
+  if (units.error) throw units.error
+  if (fields.error) throw fields.error
+
+  const allImages = images.data ?? []
+  const allUnits = units.data ?? []
+  const allFields = fields.data ?? []
+  return rows.map((row) => mapProduct({
+    ...row,
+    product_images: allImages.filter((image) => image.product_id === row.id),
+    product_units: allUnits.filter((unit) => unit.product_id === row.id),
+    product_customization_fields: allFields.filter((field) => field.product_id === row.id).map((field) => ({
+      ...field,
+      product_customization_options: (field.product_customization_options ?? []).filter((option) => option.is_active !== false),
+    })),
+  } as ProductRow))
+}
+
 export async function getPublicCategories(): Promise<CatalogCategory[]> {
   try {
-    const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Timeout fetching categories')), 1200)
-    )
-    const { data, error } = await Promise.race([
-      supabase
-        .from('categories')
-        .select('id, name_ar, slug, sort_order')
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true }),
-      timeout,
-    ])
-
+    const {data, error} = await supabase.from('categories')
+      .select('id,name_ar,slug,sort_order').eq('is_active', true).order('sort_order', {ascending: true})
     if (error) throw error
-
-    return (data ?? []).map((category) => ({
-      id: category.id,
-      label: category.name_ar,
-      slug: category.slug,
-    }))
+    return (data ?? []).map((item) => ({ id:item.id, label:item.name_ar, slug:item.slug }))
   } catch {
+    // Category chips are optional: an error must not block the product list.
     return []
   }
 }
 
-async function getProductsForChannels(channels: ProductChannel[], categoryId?: string) {
-  const fallback = async () => {
-    let query = supabase
-      .from('products')
-      .select('id,name_ar,slug,sku,status,availability,channel,base_price_jod,category_id,short_description_ar,long_description_ar,b2b_allow_custom_unit')
-      .eq('public_visible', true)
-      .eq('status', 'ACTIVE')
-      .eq('availability', 'AVAILABLE')
-      .in('channel', channels)
-      .order('sort_order', { ascending: true })
-    if (categoryId) query = query.eq('category_id', categoryId)
-    const { data, error } = await query
-    if (error) throw error
-    return ((data ?? []) as unknown as ProductRow[]).map(mapProduct)
-  }
-  try {
-    let query = supabase
-      .from('products')
-      .select(productSelect)
-      .eq('public_visible', true)
-      .eq('status', 'ACTIVE')
-      .eq('availability', 'AVAILABLE')
-      .in('channel', channels)
-      .order('sort_order', { ascending: true })
-
-    if (categoryId) query = query.eq('category_id', categoryId)
-
-    const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Timeout fetching products')), 1200)
-    )
-
-    const { data, error } = await Promise.race([query, timeout])
-    if (error) throw error
-    return ((data ?? []) as unknown as ProductRow[]).map(mapProduct)
-  } catch {
-    // A broken nested relation must not hide the actual public catalogue.
-    // Product details can still load their related data when available.
-    try { return await fallback() } catch { return [] }
-  }
+async function getProductsForChannels(channels: ProductChannel[], categoryId?: string): Promise<Product[]> {
+  const key = 'listing:' + channels.join(',') + ':' + (categoryId ?? '')
+  return cached(catalogCache, key, 25_000, async () => {
+    let query = supabase.from('products').select(baseSelect)
+      .eq('public_visible', true).eq('status', 'ACTIVE').eq('availability', 'AVAILABLE')
+      .in('channel',channels).order('sort_order',{ascending:true})
+    if(categoryId) query = query.eq('category_id', categoryId)
+    const {data,error}=await query
+    if(error) throw error
+    return hydrateProducts((data ?? []) as ProductRow[])
+  })
 }
-
-async function getProductBySlugForChannels(slug: string, channels: ProductChannel[]) {
-  try {
-    const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Timeout fetching product')), 1200)
-    )
-    const { data, error } = await Promise.race([
-      supabase
-        .from('products')
-        .select(productSelect)
-        .eq('slug', slug)
-        .eq('public_visible', true)
-        .eq('status', 'ACTIVE')
-        .eq('availability', 'AVAILABLE')
-        .in('channel', channels)
-        .maybeSingle(),
-      timeout,
-    ])
-
-    if (error) throw error
-    return data ? mapProduct(data as unknown as ProductRow) : null
-  } catch {
-    try {
-      const { data, error } = await supabase.from('products').select('id,name_ar,slug,sku,status,availability,channel,base_price_jod,category_id,short_description_ar,long_description_ar,b2b_allow_custom_unit').eq('slug', slug).eq('public_visible', true).eq('status', 'ACTIVE').eq('availability','AVAILABLE').in('channel', channels).maybeSingle()
-      if (error) throw error
-      return data ? mapProduct(data as unknown as ProductRow) : null
-    } catch { return null }
-  }
+async function getProductBySlugForChannels(slug:string,channels:ProductChannel[]):Promise<Product|null> {
+  const key='detail:' + channels.join(',') + ':' + slug
+  return cached(detailCache,key,25_000,async()=>{
+    const {data,error}=await supabase.from('products').select(baseSelect)
+      .eq('slug',slug).eq('public_visible',true).eq('status','ACTIVE')
+      .eq('availability','AVAILABLE').in('channel',channels).maybeSingle()
+    if(error)throw error
+    if(!data)return null
+    const products=await hydrateProducts([data as ProductRow],true)
+    return products[0] ?? null
+  })
 }
-
-export function getPublicProducts(categoryId?: string) {
-  return getProductsForChannels(['B2C', 'BOTH'], categoryId)
-}
-
-export function getPublicProductBySlug(slug: string) {
-  return getProductBySlugForChannels(slug, ['B2C', 'BOTH'])
-}
-
-export function getB2BProducts(categoryId?: string) {
-  return getProductsForChannels(['B2B', 'BOTH'], categoryId)
-}
-
-export function getB2BProductBySlug(slug: string) {
-  return getProductBySlugForChannels(slug, ['B2B', 'BOTH'])
-}
+export function getPublicProducts(categoryId?:string) {return getProductsForChannels(['B2C','BOTH'],categoryId)}
+export function getPublicProductBySlug(slug:string) {return getProductBySlugForChannels(slug,['B2C','BOTH'])}
+export function getB2BProducts(categoryId?:string) {return getProductsForChannels(['B2B','BOTH'],categoryId)}
+export function getB2BProductBySlug(slug:string) {return getProductBySlugForChannels(slug,['B2B','BOTH'])}

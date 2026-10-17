@@ -20,8 +20,8 @@ import Button from '@/components/ui/Button'
 import { buildPaymentRequestMessage, buildWhatsAppUrl } from '@/lib/whatsapp'
 
 type Tab = 'work' | 'billing' | 'history'
-function Section({title,children}:{title:string;children:ReactNode}) {
-  return <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 md:p-6"><h2 className="text-base font-bold">{title}</h2><div className="mt-4">{children}</div></section>
+function Section({title,children,highlight=false}:{title:string;children:ReactNode;highlight?:boolean}) {
+  return <section className={'rounded-2xl border p-4 md:p-6 '+(highlight?'border-[#D4AC68] bg-[#FFF7E7] shadow-[0_8px_24px_rgba(130,92,36,.10)]':'border-[var(--color-border)] bg-[var(--color-surface)]')}><h2 className="text-base font-bold">{title}</h2><div className="mt-4">{children}</div></section>
 }
 function Fact({label,value}:{label:string;value:ReactNode}) {
   return <div><span className="block text-xs text-[var(--color-text-muted)]">{label}</span><div className="mt-1 text-sm font-semibold">{value||'—'}</div></div>
@@ -79,9 +79,10 @@ export default function RequestDetailsPage() {
       </div>
     </header>
     {feedback?<p role="status" aria-live="polite" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm">{feedback}</p>:null}
-    <div role="tablist" aria-label="أقسام الطلب" className="flex gap-2 overflow-x-auto border-b border-[var(--color-border)]">
+    <div role="tablist" aria-label="أقسام الطلب" className="flex gap-2 overflow-x-auto border-b border-[var(--color-border)] bg-[var(--color-bg)]">
       {([['work','متابعة الطلب'],['billing','التسعير والفاتورة'],['history','الملاحظات والسجل']] as const).map(([key,label])=><button key={key} type="button" role="tab" aria-selected={tab===key} onClick={()=>setTab(key)} className={'shrink-0 border-b-2 px-3 py-3 text-sm '+(tab===key?'border-[var(--color-text)] font-bold':'border-transparent text-[var(--color-text-muted)]')}>{label}</button>)}
     </div>
+    <div className="min-h-[850px] md:min-h-[1000px]">
     {tab==='work'?<div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_350px]">
       <div className="space-y-5">
         <Section title={b2b?'الشركة وجهة التواصل':'العميل'}>
@@ -103,7 +104,7 @@ export default function RequestDetailsPage() {
         <Section title="التوصيل / الاستلام"><div className="grid gap-4 sm:grid-cols-3"><Fact label="النوع" value={request.fulfillment_type==='DELIVERY'?'توصيل':'استلام'}/><Fact label="الموعد المطلوب" value={String(request.preferred_date||'—')+' · '+String(request.preferred_time||'')}/><Fact label="العنوان" value={request.delivery_address}/></div>{request.general_notes?<p className="mt-4 rounded-xl bg-[var(--color-bg)] p-3 text-sm">ملاحظات العميل: {request.general_notes}</p>:null}</Section>
       </div>
       <div className="space-y-5">
-        <Section title="الخطوة التالية">
+        <Section title="الخطوة التالية" highlight>
           {pending?<><p className="mb-4 text-sm text-[var(--color-text-muted)]">أكد التفاصيل مع العميل، ثم اختر طريقة الدفع لاعتماد الطلب وإرساله للمطبخ.</p>
             {request.status==='NEW'||request.status==='CONTACT_REQUIRED'?<p className="rounded-lg bg-[var(--color-bg)] p-3 text-sm">ابدأ متابعة الطلب أولاً لتفعيل خيارات الاعتماد.</p>:null}
             <PaymentWorkflowPanel request={request} busy={saving} onSave={async(status,method)=>{await mutate(()=>updateDashboardPayment(runtime,id,status,method))}}/>
@@ -140,5 +141,6 @@ export default function RequestDetailsPage() {
       <textarea value={note} onChange={e=>setNote(e.target.value)} rows={3} placeholder="إضافة ملاحظة" className="mt-3 w-full rounded-xl border border-[var(--color-border)] p-3 text-sm"/>
       <Button disabled={!note.trim()||saving} onClick={()=>void mutate(async()=>{const r=await addDashboardRequestNote(runtime,id,note);setNote('');return r}).catch(()=>{})}>حفظ الملاحظة</Button>
     </Section><Section title="سجل النشاط"><div className="space-y-3">{data.activity.map(a=><div key={a.id} className="border-b border-[var(--color-border)] pb-3 text-sm"><p>{a.description}</p><p className="mt-1 text-xs text-[var(--color-text-muted)]">{new Date(a.created_at).toLocaleString('ar-JO')}</p></div>)}</div></Section></div>:null}
+    </div>
   </main>
 }

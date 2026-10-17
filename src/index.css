@@ -11,6 +11,7 @@ html {
   background: var(--color-bg);
   scroll-behavior: smooth;
   overflow-x: hidden;
+  scrollbar-gutter: stable;
 }
 
 body {

@@ -8,10 +8,11 @@ type Props = {
   request: Record<string, any>
   busy: boolean
   editable: boolean
+  disabledReason?: string
   onSave: (type: DiscountType, value: number, reason: string) => Promise<void>
 }
 
-export default function OrderDiscountEditor({ request, busy, editable, onSave }: Props) {
+export default function OrderDiscountEditor({ request, busy, editable, disabledReason, onSave }: Props) {
   const [type, setType] = useState<DiscountType>('NONE')
   const [value, setValue] = useState('0')
   const [reason, setReason] = useState('')
@@ -27,6 +28,7 @@ export default function OrderDiscountEditor({ request, busy, editable, onSave }:
   const valid = type === 'NONE' || (Number.isFinite(Number(value)) && Number(value) >= 0 &&
     (type !== 'PERCENT' || Number(value) <= 100) && (type !== 'FIXED' || Number(value) <= base))
   const submit = async () => {
+    if (!editable || busy) return
     if (!valid) { setError('قيمة الخصم غير صالحة أو تتجاوز المبلغ المتبقي.'); return }
     try { setError(''); await onSave(type, type === 'NONE' ? 0 : Number(value), reason) }
     catch { setError('تعذر تسجيل الخصم. تأكد من الصلاحيات وأن الفاتورة لم تُصدر بعد.') }
@@ -37,8 +39,8 @@ export default function OrderDiscountEditor({ request, busy, editable, onSave }:
     <div className="grid gap-2 sm:grid-cols-3">
       {([['NONE','بدون خصم'],['PERCENT','نسبة %'],['FIXED','مبلغ JOD']] as const).map(([id,label]) =>
         <button type="button" key={id} disabled={!editable || busy} onClick={() => setType(id)}
-          aria-pressed={type === id} className={'min-h-11 rounded-xl border px-3 text-sm ' +
-            (type === id ? 'border-[var(--color-text)] bg-[var(--color-bg)] font-bold' : 'border-[var(--color-border)]')}>{label}</button>)}
+          aria-pressed={type === id} className={'min-h-11 cursor-pointer rounded-xl border px-3 text-sm transition-[background-color,border-color,box-shadow] duration-150 hover:border-[#B68B60] hover:bg-[#F8EDDE] focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] disabled:cursor-not-allowed disabled:opacity-55 ' +
+            (type === id ? 'border-[#805A37] bg-[#FAF0E2] font-bold shadow-sm' : 'border-[var(--color-border)] bg-white')}>{label}</button>)}
     </div>
     {type !== 'NONE' ? <label className="block text-sm">قيمة الخصم ({type === 'PERCENT' ? '%' : 'د.أ'})
       <input type="number" min="0" max={type === 'PERCENT' ? '100' : undefined} step="0.001"
@@ -50,7 +52,7 @@ export default function OrderDiscountEditor({ request, busy, editable, onSave }:
         className="mt-2 h-11 w-full rounded-xl border border-[var(--color-border)] bg-white px-3" placeholder="مثال: عرض خاص" />
     </label>
     {type !== 'NONE' ? <p className="text-sm text-[var(--color-text-muted)]">قيمة الخصم المتوقعة: {formatJod(Math.min(Math.max(0, amount),base))}</p> : null}
-    {!editable ? <p className="text-xs text-[var(--color-text-muted)]">يمكن تعديل الخصم بواسطة الإدارة قبل إصدار الفاتورة فقط.</p> : null}
+    {!editable ? <p className="text-xs leading-6 text-[var(--color-text-muted)]">{disabledReason||'تعديل الخصم متاح للإدارة قبل إصدار الفاتورة فقط.'}</p> : null}
     {error ? <p role="alert" className="text-sm text-red-700">{error}</p> : null}
     <Button disabled={!editable || busy || !valid} onClick={()=>void submit()}>{busy?'جاري الحفظ...':'تطبيق خصم الطلب'}</Button>
   </div>

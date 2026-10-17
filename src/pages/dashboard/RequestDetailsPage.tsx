@@ -15,6 +15,7 @@ import InvoicePanel from '@/components/dashboard/InvoicePanel'
 import PaymentWorkflowPanel from '@/components/dashboard/PaymentWorkflowPanel'
 import DeliveryActions from '@/components/dashboard/DeliveryActions'
 import OrderDiscountEditor, { type DiscountType } from '@/components/dashboard/OrderDiscountEditor'
+import ItemDiscountEditor from '@/components/dashboard/ItemDiscountEditor'
 import { canLinkCustomers, canManagePricing } from '@/lib/dashboardPermissions'
 import { formatJod } from '@/lib/format'
 import Button from '@/components/ui/Button'
@@ -56,7 +57,10 @@ export default function RequestDetailsPage() {
   const b2b=request.customer_type==='B2B'
   const name=(b2b?request.company_name_snapshot:request.customer_name_snapshot)||request.customer_name_snapshot||'—'
   const pending=['NEW','CONTACT_REQUIRED','AWAITING_CONFIRMATION'].includes(request.status)
-  const editable=canManagePricing(role)&&!request.invoice_issued_at&&!['CANCELLED','COMPLETED','PREPARING','READY','OUT_FOR_DELIVERY'].includes(request.status)
+  const invoiceIssued=Boolean(request.invoice_issued_at)
+  const pricingRoleAllowed=canManagePricing(role)
+  const editable=pricingRoleAllowed&&!invoiceIssued&&['NEW','CONTACT_REQUIRED','AWAITING_CONFIRMATION'].includes(request.status)
+  const discountLockReason=invoiceIssued?'الفاتورة صدرت بالفعل ولا يمكن تغيير مبالغها. طبّق الخصومات على الطلبات الجديدة قبل تأكيد الدفع والاعتماد.':!pricingRoleAllowed?'تعديل الخصومات متاح للمدير ومدير النظام فقط.':'هذا الطلب مقفل للتسعير حسب حالته الحالية.'
   const currentDiscount=Number(request.discount_total_jod??request.discount_amount_jod??0)
   const openBilling=()=>{
     setTab('billing')
@@ -139,13 +143,15 @@ export default function RequestDetailsPage() {
       <div className="space-y-5">
         <Section title="التسعير والخصومات">
           <p className="mb-3 text-sm text-[var(--color-text-muted)]">خصم العميل الدائم: {formatJod(Number(request.customer_discount_jod??0))} {data.customer?'· من ملف العميل':'· اربط العميل لتطبيق خصمه'}</p>
-          <OrderDiscountEditor request={request} editable={editable} busy={saving} onSave={(type:DiscountType,value,reason)=>mutate(()=>updateDashboardOrderDiscount(runtime,id,type,value,reason))}/>
+          <OrderDiscountEditor request={request} editable={editable} busy={saving} disabledReason={discountLockReason} onSave={(type:DiscountType,value,reason)=>mutate(()=>updateDashboardOrderDiscount(runtime,id,type,value,reason))}/>
         </Section>
-        <Section title="خصومات المنتجات"><div className="space-y-3">{data.items.map(item=><div key={item.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] pb-3"><div className="text-sm"><strong>{item.product_name_snapshot}</strong><p className="text-xs text-[var(--color-text-muted)]">×{item.quantity}</p></div>
-          <label className="text-xs">خصم المنتج (د.أ)<input type="number" min="0" step="0.001" key={item.id+'-'+String(item.discount_amount_jod)}
-            defaultValue={Number(item.discount_amount_jod??0)} disabled={!editable||saving}
-            onBlur={e=>{const n=Number(e.target.value);if(Number.isFinite(n)&&n!==Number(item.discount_amount_jod??0))void mutate(()=>updateDashboardItemDiscount(runtime,id,item.id,n)).catch(()=>{})}}
-            className="mt-1 block h-10 w-28 rounded-lg border border-[var(--color-border)] px-2"/></label></div>)}</div></Section>
+        <Section title="خصومات المنتجات">
+           {!editable?<p className="mb-3 text-xs leading-6 text-[var(--color-text-muted)]">{discountLockReason}</p>:null}
+           <div className="space-y-1">
+             {data.items.map(item=><ItemDiscountEditor key={item.id} item={item} editable={editable} busy={saving}
+               onSave={amount=>mutate(()=>updateDashboardItemDiscount(runtime,id,item.id,amount),'تم حفظ خصم المنتج وتحديث الإجمالي')}/>)}
+           </div>
+         </Section>
       </div>
       <div className="space-y-5">
         <Section title="الدفع"><PaymentWorkflowPanel request={request} busy={saving} onSave={async(s,m)=>{await mutate(()=>updateDashboardPayment(runtime,id,s,m))}}/></Section>

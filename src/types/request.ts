@@ -35,6 +35,7 @@ export type RequestItem = {
   quantity: number
   unitId?: string
   unitLabel: string
+  imageUrl?: string
   customUnit?: string
   observedBasePriceJod?: number
   customization?: Record<string, string | string[]>

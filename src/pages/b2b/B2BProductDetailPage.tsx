@@ -123,7 +123,7 @@ export default function B2BProductDetailPage() {
             <section className="mt-6"><h2 className="mb-3 font-semibold">الكمية</h2><QuantityControl value={quantity} onChange={setQuantity} /></section>
             {product.customizationFields?.length ? <div className="mt-6"><CustomizationFields fields={product.customizationFields} values={customization} onChange={(fieldId, value) => setCustomization((current) => ({ ...current, [fieldId]: value }))} /></div> : null}
             <section className="mt-6"><h2 className="mb-3 font-semibold">ملاحظات على هذا المنتج</h2><NotesField value={notes} onChange={setNotes} /></section>
-            {!canAdd ? <p role="alert" className="mt-3 text-xs text-red-700">أكمل الوحدة والخيارات الإلزامية قبل الإضافة.</p> : null}
+            {!canAdd ? <p role="alert" className="mt-3 text-xs text-red-700">{!units.length && !product.b2bAllowCustomUnit ? 'يحتاج المنتج إلى إعداد وحدة توريد من الإدارة قبل طلبه.' : 'اختر وحدة التوريد وأكمل الخيارات المطلوبة.'}</p> : null}
             <Button size="lg" className="mt-6 hidden w-full md:inline-flex" disabled={!canAdd} onClick={add}>{added ? 'تمت الإضافة — عرض الطلب' : 'إضافة إلى الطلب'}</Button>
           </div>
         </div>

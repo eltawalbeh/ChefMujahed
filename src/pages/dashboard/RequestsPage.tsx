@@ -72,7 +72,7 @@ export default function RequestsPage(){
         <p className="mt-2 text-sm font-semibold lg:mt-0">{r.customer_label}</p>
         <div className="mt-2 hidden lg:block"><RequestStatusBadge status={r.status}/><p className="mt-1 text-xs text-[var(--color-text-muted)]">{new Date(r.submitted_at).toLocaleDateString('ar-JO')}</p></div>
         <p dir="ltr" className="mt-2 text-right text-sm font-semibold lg:mt-0">{formatJod(Number(r.total_jod||0))}</p>
-        <p className="mt-3 inline-block rounded-lg bg-[var(--color-text)] px-3 py-2 text-xs font-semibold text-white lg:mt-0 lg:text-center">{nextAction(r)} ←</p>
+        <p className="mt-3 inline-block rounded-lg bg-[var(--color-text)] px-3 py-2 text-xs font-semibold text-white lg:mt-0 lg:text-center">{nextAction(r)}</p>
       </Link>)}
     </div>}
     <nav aria-label="الصفحات" className="flex items-center justify-center gap-3">

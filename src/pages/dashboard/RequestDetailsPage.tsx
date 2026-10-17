@@ -4,7 +4,7 @@ import { ArrowsClockwise, PencilSimple, XCircle } from '@phosphor-icons/react'
 import {
   addDashboardRequestNote, getDashboardRequest, linkDashboardRequestCustomer,
   updateDashboardItemDiscount, updateDashboardOrderDiscount, updateDashboardPayment,
-  updateDashboardRequestStatus, markDashboardRequestPersonal,
+  updateDashboardRequestStatus, advanceDashboardManagerOrderStatus, markDashboardRequestPersonal,
   getDashboardInvoiceAdjustments, addDashboardInvoiceAdjustment,
 } from '@/data/dashboard'
 import { useDashboard } from '@/state/DashboardContext'
@@ -19,11 +19,11 @@ import OrderDiscountEditor, { type DiscountType } from '@/components/dashboard/O
 import ItemDiscountEditor from '@/components/dashboard/ItemDiscountEditor'
 import InvoiceAdjustmentEditor from '@/components/dashboard/InvoiceAdjustmentEditor'
 import type { InvoiceAdjustmentSummary } from '@/data/dashboard'
-import { canLinkCustomers, canManagePricing } from '@/lib/dashboardPermissions'
+import { canLinkCustomers, canManagePricing, canManageOrderProgress } from '@/lib/dashboardPermissions'
 import { formatJod } from '@/lib/format'
 import Button from '@/components/ui/Button'
 import DashboardBreadcrumbs from '@/components/dashboard/DashboardBreadcrumbs'
-import { buildPaymentRequestMessage, buildWhatsAppUrl } from '@/lib/whatsapp'
+import { buildPaymentRequestMessage, buildWhatsAppUrl, buildOrderStatusWhatsAppMessage, type OrderMessageStatus } from '@/lib/whatsapp'
 
 type Tab = 'work' | 'billing' | 'history'
 function Section({title,children,highlight=false}:{title:string;children:ReactNode;highlight?:boolean}) {
@@ -74,6 +74,20 @@ export default function RequestDetailsPage() {
   const pricingRoleAllowed=canManagePricing(role)
   const editable=pricingRoleAllowed&&!invoiceIssued&&['NEW','CONTACT_REQUIRED','AWAITING_CONFIRMATION'].includes(request.status)
   const discountLockReason=invoiceIssued?'الفاتورة صدرت بالفعل ولا يمكن تغيير مبالغها. طبّق الخصومات على الطلبات الجديدة قبل تأكيد الدفع والاعتماد.':!pricingRoleAllowed?'تعديل الخصومات متاح للمدير ومدير النظام فقط.':'هذا الطلب مقفل للتسعير حسب حالته الحالية.'
+  const canChangeProgress=canManageOrderProgress(role)
+  const phone=request.customer_phone_snapshot||''
+  const customerChatHref=buildWhatsAppUrl('مرحباً، بخصوص طلبكم رقم '+request.reference,phone)
+  const updateStatuses=['APPROVED','PREPARING','READY','OUT_FOR_DELIVERY','COMPLETED'] as const
+  const customerUpdateStatus=updateStatuses.find(candidate=>candidate===request.status) as OrderMessageStatus|undefined
+  const statusMessageHref=customerUpdateStatus?buildWhatsAppUrl(buildOrderStatusWhatsAppMessage({
+    reference:request.reference,customerName:name,status:customerUpdateStatus,
+    fulfillmentType:request.fulfillment_type==='DELIVERY'?'DELIVERY':'COLLECTION',
+  }),phone):''
+  const statusMessageLabel=customerUpdateStatus==='APPROVED'?'إرسال تأكيد الطلب':
+    customerUpdateStatus==='PREPARING'?'إبلاغ العميل ببدء التحضير':
+    customerUpdateStatus==='READY'?'إبلاغ العميل أن الطلب جاهز':
+    customerUpdateStatus==='OUT_FOR_DELIVERY'?'إبلاغ العميل بخروج الطلب للتوصيل':
+    customerUpdateStatus==='COMPLETED'?'إرسال تأكيد التسليم':''
   const currentDiscount=Number(request.discount_total_jod??request.discount_amount_jod??0)
   const addInvoiceAdjustment=async(type:'PERCENT'|'FIXED',value:number,reason:string,itemId?:string)=>{
     setSaving(true);setFeedback('')
@@ -99,9 +113,11 @@ export default function RequestDetailsPage() {
     ).catch(()=>{})
   }
   const sendPaymentMessage=()=>{
-    if(!request.customer_phone_snapshot||!contact.paymentInstructions?.trim()){setFeedback('رقم الهاتف أو تعليمات الدفع غير متوفرة. راجع معلومات التواصل في المحتوى.');return}
+    if(!phone||!contact.paymentInstructions?.trim()){setFeedback('رقم الهاتف أو تعليمات الدفع غير متوفرة. راجع بيانات التواصل.');return}
     const msg=buildPaymentRequestMessage({reference:request.reference,customerName:name,totalJod:total,instructions:contact.paymentInstructions.trim()})
-    window.open(buildWhatsAppUrl(msg,request.customer_phone_snapshot),'_blank','noopener,noreferrer')
+    const url=buildWhatsAppUrl(msg,phone)
+    if(!url){setFeedback('رقم العميل غير صالح لواتساب. صححه مع مفتاح الدولة من ملف العميل.');return}
+    window.open(url,'_blank','noopener,noreferrer')
   }
   return <main dir="rtl" className="mx-auto max-w-[1280px] space-y-5 p-4 pb-28 lg:p-8">
     <DashboardBreadcrumbs items={[{label:'الطلبات',to:'/dashboard/requests'},{label:request.reference}]}/>
@@ -115,12 +131,28 @@ export default function RequestDetailsPage() {
       </div>
       <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-[var(--color-border)] pt-4">
         {(request.status==='NEW'||request.status==='CONTACT_REQUIRED')?<Button disabled={saving} onClick={()=>void mutate(()=>updateDashboardRequestStatus(runtime,id,'AWAITING_CONFIRMATION')).catch(()=>{})}>بدء متابعة الطلب</Button>:null}
-        <DeliveryActions status={request.status} fulfillmentType={request.fulfillment_type} busy={saving} onChange={s=>void mutate(()=>updateDashboardRequestStatus(runtime,id,s)).catch(()=>{})}/>
-        <a href={buildWhatsAppUrl('مرحباً، بخصوص طلبكم رقم '+request.reference,request.customer_phone_snapshot||'')} target="_blank" rel="noopener noreferrer"
-          className="inline-flex min-h-11 cursor-pointer items-center rounded-xl border border-[var(--color-border)] bg-[#25D366] px-4 text-sm font-semibold text-[#102C1D] transition-[background-color,transform,box-shadow] hover:-translate-y-px hover:bg-[#1EBC59] hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#087E34] active:translate-y-0 active:bg-[#159B47]">واتساب العميل</a>
+        <DeliveryActions status={request.status} fulfillmentType={request.fulfillment_type} busy={saving}
+          canManage={canChangeProgress}
+          onChange={next=>void mutate(()=>canChangeProgress
+            ?advanceDashboardManagerOrderStatus(runtime,id,next)
+            :updateDashboardRequestStatus(runtime,id,next),
+            'تم تحديث حالة الطلب. يمكنك الآن إبلاغ العميل عبر زر واتساب بالأسفل.').catch(()=>{})}/>
+        {customerChatHref?<a href={customerChatHref} target="_blank" rel="noopener noreferrer"
+          className="inline-flex min-h-11 cursor-pointer items-center rounded-xl border border-[#168B43] bg-[#25D366] px-4 text-sm font-semibold text-[#102C1D] transition-[background-color,transform,box-shadow] hover:-translate-y-px hover:bg-[#1EBC59] hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#087E34] active:translate-y-0">واتساب العميل</a>
+          :<span role="status" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">رقم العميل غير صالح لواتساب. راجع رقم الهاتف ومفتاح الدولة.</span>}
         {request.status!=='CANCELLED'&&request.status!=='COMPLETED'?<Button variant="danger" disabled={saving} onClick={()=>{if(window.confirm('هل تريد إلغاء هذا الطلب؟'))void mutate(()=>updateDashboardRequestStatus(runtime,id,'CANCELLED')).catch(()=>{})}}><XCircle size={18} aria-hidden="true"/>إلغاء الطلب</Button>:null}
       </div>
     </header>
+    {customerUpdateStatus ? <section className="rounded-2xl border border-[#B8DEC5] bg-[#F2FBF5] p-4" aria-label="إبلاغ العميل بتحديث الطلب">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div><h2 className="font-bold text-[#174D2A]">{statusMessageLabel}</h2>
+          <p className="mt-1 text-xs leading-6 text-[#3A6048]">رسالة واتساب جاهزة حسب المرحلة الحالية. افتحها وراجعها، ثم اضغط إرسال داخل واتساب.</p></div>
+        {statusMessageHref?<a href={statusMessageHref} target="_blank" rel="noopener noreferrer"
+          className="inline-flex min-h-11 cursor-pointer items-center rounded-xl bg-[#25D366] px-4 font-bold text-[#12371E] transition-all hover:-translate-y-px hover:bg-[#1FBC59] hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#087E34]">
+          {statusMessageLabel} عبر واتساب</a>
+          :<p role="alert" className="text-xs text-red-700">أكمل رقم موبايل العميل ومفتاح الدولة أولًا حتى تقدر تبعث تحديث الطلب.</p>}
+      </div>
+    </section>:null}
     {feedback?<p role="status" aria-live="polite" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm">{feedback}</p>:null}
     <div ref={tabsRef} role="tablist" aria-label="أقسام الطلب" className="flex scroll-mt-24 gap-2 overflow-x-auto border-b border-[var(--color-border)] bg-[var(--color-bg)]">
       {([['work','متابعة الطلب'],['billing','التسعير والفاتورة'],['history','الملاحظات والسجل']] as const).map(([key,label])=><button id={'request-'+key+'-tab'} key={key} type="button" role="tab" aria-selected={tab===key} onClick={()=>setTab(key)} className={'shrink-0 border-b-2 px-3 py-3 text-sm '+(tab===key?'border-[var(--color-text)] font-bold':'border-transparent text-[var(--color-text-muted)]')}>{label}</button>)}

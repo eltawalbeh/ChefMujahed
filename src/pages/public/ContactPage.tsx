@@ -2,13 +2,12 @@ import { Link } from 'react-router-dom'
 import PublicHeader from '@/components/public/PublicHeader'
 import PublicFooter from '@/components/public/PublicFooter'
 import { useSitePage } from '@/hooks/useSitePage'
+import { normalizePhoneToE164, whatsAppDigits } from '@/lib/phone'
 
-function contactLink(kind: 'whatsapp' | 'phone', value: unknown) {
-  if (typeof value !== 'string' || !value.trim()) return null
-  const number = value.replace(/[^\d+]/g, '').replace(/^00/, '+')
-  const digits = number.replace(/\D/g, '')
-  if (digits.length < 7) return null
-  return kind === 'whatsapp' ? `https://wa.me/${digits}` : `tel:${number}`
+function contactLink(kind:'whatsapp'|'phone',value:unknown){
+  if(typeof value!=='string'||!value.trim())return null
+  const e164=normalizePhoneToE164(value)
+  return e164?(kind==='whatsapp'?'https://wa.me/'+whatsAppDigits(value):'tel:'+e164):null
 }
 
 export default function ContactPage() {

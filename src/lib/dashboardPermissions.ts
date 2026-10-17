@@ -37,3 +37,7 @@ export function roleLabel(role: DashboardRole) {
   if (role === 'ADMIN') return 'مدير'
   return 'مشرف'
 }
+
+export function canManageOrderProgress(role: DashboardRole) {
+  return role === 'SUPER_ADMIN' || role === 'ADMIN'
+}

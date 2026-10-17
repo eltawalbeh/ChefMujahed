@@ -34,10 +34,10 @@ export function customerPayload(d:CustomerProfileDraft) {
   return {...d,defaultDiscountValue:d.defaultDiscountType==='NONE'?0:Number(d.defaultDiscountValue)}
 }
 export default function CustomerProfileEditor({draft,onChange}:{draft:CustomerProfileDraft;onChange:(draft:CustomerProfileDraft)=>void}) {
-  const field=(label:string,key:keyof CustomerProfileDraft,extra?:{type?:string;required?:boolean})=><label key={key} className="block text-sm"><span className="mb-1.5 block font-medium">{label}</span>
-    <input type={extra?.type??'text'} required={extra?.required} value={String(draft[key]??'')}
+  const field=(label:string,key:keyof CustomerProfileDraft,extra?:{type?:string;required?:boolean;help?:string;placeholder?:string})=><label key={key} className="block text-sm"><span className="mb-1.5 block font-medium">{label}</span>
+    <input type={extra?.type??'text'} required={extra?.required} aria-describedby={extra?.help?'help-'+key:undefined} placeholder={extra?.placeholder} value={String(draft[key]??'')}
       onChange={e=>onChange({...draft,[key]:e.target.value})}
-      className="h-11 w-full rounded-xl border border-[var(--color-border)] bg-white px-3 outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]" /></label>
+      className="h-11 w-full rounded-xl border border-[var(--color-border)] bg-white px-3 outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]" />{extra?.help?<span id={'help-'+key} className="mt-1.5 block text-xs leading-5 text-[var(--color-text-muted)]">{extra.help}</span>:null}</label>
   return <div dir="rtl" className="space-y-5">
     <div className="grid gap-4 sm:grid-cols-2">
       {draft.customerType==='B2B'?field('اسم الشركة *','companyName',{required:true}):null}
@@ -48,7 +48,7 @@ export default function CustomerProfileEditor({draft,onChange}:{draft:CustomerPr
       {field('العنوان','address')}
       {draft.customerType==='B2B'?field('عنوان الفواتير','billingAddress'):null}
       {draft.customerType==='B2B'?field('الرقم الضريبي','taxNumber'):null}
-      {draft.customerType==='B2B'?field('شروط الدفع','paymentTerms'):null}
+      {draft.customerType==='B2B'?field('شروط الدفع','paymentTerms',{placeholder:'مثال: عند التسليم أو خلال 7 أيام',help:'اكتب اتفاق التحصيل مع الشركة: عند الاستلام، مسبقًا، خلال 7 أو 30 يومًا، أو حساب شهري. هذه ملاحظة مرجعية للموظفين، ولا تفعّل تحصيلًا أو فاتورة تلقائيًا.'}):null}
     </div>
     <fieldset className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4">
       <legend className="px-2 text-sm font-bold">الخصم الدائم للحساب</legend>

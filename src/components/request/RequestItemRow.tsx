@@ -23,7 +23,7 @@ export default function RequestItemRow({
     let live=true
     setImageUrl(item.imageUrl??'');setImageBroken(false)
     if(!item.imageUrl && item.productSlug) void getPublicProductBySlug(item.productSlug).then(p=>{
-      if(live)setImageUrl(p?.images.find(image=>image.isPrimary)?.url??p?.images[0]?.url??'')
+      if(live)setImageUrl(p?.images?.find(image=>image.isPrimary)?.url??p?.images?.[0]?.url??'')
     }).catch(()=>{})
     return()=>{live=false}
   },[item.productSlug,item.imageUrl])

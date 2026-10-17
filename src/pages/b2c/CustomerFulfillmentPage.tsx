@@ -86,7 +86,7 @@ export default function CustomerFulfillmentPage() {
       >
         <div dir="rtl" className="order-0 col-span-full flex items-center justify-between text-sm text-[var(--color-text-muted)]">
           <strong className="text-[var(--color-text)]">تفاصيل الطلب والاستلام</strong>
-          <span>الخطوة <bdi dir="ltr">2 / 3</bdi></span>
+          <span><span lang="en" dir="ltr">Step 2 of 3</span></span>
         </div>
         <div dir="rtl" className="order-0 col-span-full -mt-4"><Button variant="secondary" onClick={returnToCart}><ArrowRight size={18} aria-hidden="true"/>العودة إلى السلة</Button></div>
         <aside dir="rtl" className="order-2 md:order-1">

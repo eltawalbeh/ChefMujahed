@@ -23,7 +23,7 @@ jobs:
       - name: Production build
         run: pnpm build
       - name: Compile standalone print formatter
-        run: pnpm exec esbuild src/domain/invoicePrint.ts --bundle --platform=node --format=cjs --outfile=/tmp/chefmujahed-invoice-print.cjs --alias:@=./src
+        run: pnpm dlx esbuild@0.25.12 src/domain/invoicePrint.ts --bundle --platform=node --format=cjs --outfile=/tmp/chefmujahed-invoice-print.cjs --alias:@=./src
       - name: Generate invoice print fixtures
         run: node scripts/qa-invoice-print.cjs
       - name: Print fixtures to PDF and inspect pages

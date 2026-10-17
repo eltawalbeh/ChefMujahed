@@ -1,12 +1,14 @@
 import { formatJod } from '@/lib/format'
 import Button from '@/components/ui/Button'
-import { openInvoicePrint } from '@/domain/invoicePrint'
+import { openInvoicePrint, openInvoiceAdjustmentPrint } from '@/domain/invoicePrint'
+import type { InvoiceAdjustmentSummary } from '@/data/dashboard'
 import { Printer } from '@phosphor-icons/react'
 import { calculateInvoiceTotals, invoiceNumberForRequest, invoiceTaxRate } from '@/domain/invoice'
 
 type InvoicePanelProps = {
   request: Record<string, any>
   items: Array<Record<string, any>>
+  adjustments?: InvoiceAdjustmentSummary
 }
 
 function lineFromItem(item: Record<string, any>) {
@@ -19,7 +21,7 @@ function lineFromItem(item: Record<string, any>) {
   }
 }
 
-export default function InvoicePanel({ request, items }: InvoicePanelProps) {
+export default function InvoicePanel({ request, items, adjustments }: InvoicePanelProps) {
   const isB2B = request.customer_type === 'B2B'
   const taxRate = invoiceTaxRate(request)
   const lines = items.map(lineFromItem)
@@ -87,6 +89,21 @@ export default function InvoicePanel({ request, items }: InvoicePanelProps) {
         <div className="flex justify-between gap-4 border-t border-[var(--color-border)] pt-3 text-base"><strong>الإجمالي</strong><strong>{formatJod(total)}</strong></div>
       </div>
 
+      {adjustments?.adjustments.length ? <div className="mt-5 rounded-xl border border-[#D9BA91] bg-[#FFF7EA] p-4">
+        <h3 className="font-bold">تعديلات استثنائية بعد إصدار الفاتورة</h3>
+        <p className="mt-1 text-xs leading-6">الفاتورة أعلاه نسخة أصلية محفوظة. التعديلات التالية منفصلة وموثقة ولا تعيد إصدار الفاتورة.</p>
+        <div className="mt-3 space-y-2">
+          {adjustments.adjustments.map(a=><div key={a.id} className="rounded-lg border border-[#E6D6C1] bg-white p-3 text-sm">
+            <div className="flex flex-wrap justify-between gap-2"><strong>مذكرة #{a.revision} · {a.item_id?'خصم منتج':'خصم الطلب'}</strong><bdi dir="ltr">- {formatJod(a.amount_jod)}</bdi></div>
+            <p className="mt-1 text-xs">{a.reason}</p>
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">{a.actor_name} · {new Date(a.created_at).toLocaleString('ar-JO')}</p>
+          </div>)}
+        </div>
+        <div className="mt-4 flex justify-between border-t border-[#D9BA91] pt-3 text-sm"><span>خصومات بعد الإصدار</span><strong dir="ltr">- {formatJod(adjustments.adjustments_total_jod)}</strong></div>
+        <div className="mt-2 flex justify-between text-base"><strong>{request.payment_status==='PAID'?'القيمة بعد الخصم (تحتاج تسوية المبلغ المدفوع)':'الرصيد بعد الخصم'}</strong><strong dir="ltr">{formatJod(adjustments.adjusted_balance_jod)}</strong></div>
+        <Button className="mt-3" variant="secondary" onClick={()=>{if(!openInvoiceAdjustmentPrint(request,adjustments))window.alert('اسمح بالنوافذ المنبثقة لطباعة مذكرة الخصم.')}}><Printer size={18}/>طباعة كشف التعديلات</Button>
+        {request.payment_status==='PAID'?<p className="mt-2 text-xs text-[#78552C]">تم الدفع مسبقًا؛ الخصم لا ينفذ استردادًا تلقائيًا، ويجب تسوية الفرق ماليًا.</p>:null}
+      </div>:null}
       <div className="mt-4 border-t border-[var(--color-border)] pt-4 text-xs leading-6 text-[var(--color-text-muted)]">
         {isB2B && request.payment_status === 'MONTHLY_B2B_ACCOUNT'
           ? 'هذا الطلب مرتبط بحساب شركات شهري، وتحدد شروط الاستحقاق بعد اعتماد الحساب.'

@@ -21,7 +21,7 @@ export default function ProductDetailPage() {
   const { addItem, isRequestOpen, openRequest } = useRequestDraft()
 
   const [product, setProduct] = useState<Product | null>(null)
-  useProductSocialMeta(product)
+  useProductSocialMeta(product,'B2C')
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [error, setError] = useState('')

@@ -1,3 +1,4 @@
+import { normalizePhoneToE164 } from '@/lib/phone'
 import type {
   B2BCompanyDraft,
   B2CCustomerDraft,
@@ -101,7 +102,7 @@ export function buildCanonicalB2CDraft(input: {
     clientSubmissionId: input.clientSubmissionId,
     customer: {
       name: input.customer.name.trim(),
-      phone: input.customer.phone.trim(),
+      phone: normalizePhoneToE164(input.customer.phone)??input.customer.phone.trim(),
       email: input.customer.email?.trim() || undefined,
     },
     fulfillment: sanitizeFulfillment(input.fulfillment),
@@ -124,7 +125,7 @@ export function buildCanonicalB2BDraft(input: {
     company: {
       companyName: input.company.companyName.trim(),
       contactName: input.company.contactName.trim(),
-      phone: input.company.phone.trim(),
+      phone: normalizePhoneToE164(input.company.phone)??input.company.phone.trim(),
       email: input.company.email?.trim() || undefined,
     },
     fulfillment: sanitizeFulfillment(input.fulfillment),
@@ -151,13 +152,13 @@ export function validateCanonicalDraft(
   }
 
   if (draft.customerType === 'B2C') {
-    if (draft.customer.name.length < 2 || draft.customer.phone.length < 7) {
+    if (draft.customer.name.length < 2 || !normalizePhoneToE164(draft.customer.phone)) {
       throw new Error('Invalid B2C customer data')
     }
   } else if (
     draft.company.companyName.length < 2 ||
     draft.company.contactName.length < 2 ||
-    draft.company.phone.length < 7
+    !normalizePhoneToE164(draft.company.phone)
   ) {
     throw new Error('Invalid B2B company/contact data')
   }

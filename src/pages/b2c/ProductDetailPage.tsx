@@ -158,7 +158,7 @@ export default function ProductDetailPage() {
   const selectedUnit = orderableUnits.find((unit) => unit.id === selectedUnitId)
 
   function handleAddToRequest() {
-    if (!canAdd) return
+    if (!product || !canAdd) return
 
     const customizationLabels =
       product.customizationFields?.flatMap((field) => {
@@ -183,7 +183,7 @@ export default function ProductDetailPage() {
       unitId: selectedUnit?.id,
       unitLabel: selectedUnit?.label ?? 'قطعة',
       observedBasePriceJod: selectedUnit?.priceJod ?? product.basePriceJod,
-      imageUrl: product.images.find(image=>image.isPrimary)?.url ?? product.images[0]?.url,
+      imageUrl: product.images?.find(image=>image.isPrimary)?.url ?? product.images?.[0]?.url,
       customization,
       customizationLabels,
       notes: notes.trim() || undefined,

@@ -1,5 +1,6 @@
 import {useCallback,useEffect,useState} from 'react'
 import {Link} from 'react-router-dom'
+import { ArrowClockwise, Funnel, X } from '@phosphor-icons/react'
 import {listDashboardRequests} from '@/data/dashboard'
 import {useDashboard} from '@/state/DashboardContext'
 import type {DashboardListResponse,DashboardRequestListItem} from '@/types/dashboard'
@@ -48,18 +49,18 @@ export default function RequestsPage(){
   const totalPages=Math.max(1,Math.ceil(data.total/data.pageSize))
   return <main dir="rtl" className="space-y-5 p-4 lg:p-8">
     <div className="flex flex-wrap items-center justify-between gap-3"><div><h1 className="text-2xl font-bold">صندوق الطلبات</h1><p className="text-sm text-[var(--color-text-muted)]">اعرف المطلوب من كل طلب بدون الدخول في تفاصيله.</p></div>
-      <div className="flex gap-2"><Button variant="secondary" onClick={()=>void load()}>تحديث</Button><Button onClick={()=>setManual(true)}>إضافة طلب</Button></div></div>
+      <div className="flex gap-2"><Button variant="secondary" size="icon" onClick={()=>void load()} aria-label="تحديث الطلبات" title="تحديث الطلبات"><ArrowClockwise size={21} aria-hidden="true"/></Button><Button onClick={()=>setManual(true)}>إضافة طلب</Button></div></div>
     <section className="space-y-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
       <div role="tablist" aria-label="حالات الطلب" className="flex gap-2 overflow-x-auto pb-2">{views.map(([v,label])=><button key={v} role="tab" aria-selected={view===v} onClick={()=>updateView(v)}
-        className={'shrink-0 rounded-xl px-3 py-2 text-sm '+(view===v?'bg-[var(--color-text)] font-bold text-white':'bg-[var(--color-bg)] text-[var(--color-text-muted)]')}>{label}</button>)}</div>
+        className={'min-h-11 shrink-0 cursor-pointer rounded-xl border px-3 py-2 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] '+(view===v?'border-[var(--color-text)] bg-[var(--color-text)] font-bold text-white':'border-transparent bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:border-[#E1C9A7] hover:bg-[#F5EADD]')}>{label}</button>)}</div>
       <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
         <input aria-label="بحث عن طلب" value={q} onChange={e=>{setQ(e.target.value);setPage(1)}} placeholder="بحث برقم الطلب، اسم العميل أو الهاتف" className="h-11 w-full rounded-xl border border-[var(--color-border)] bg-white px-3"/>
         <select aria-label="نوع العميل" value={channel} onChange={e=>{setChannel(e.target.value);setPage(1)}} className="h-11 rounded-xl border border-[var(--color-border)] bg-white px-3"><option value="">B2C + B2B</option><option value="B2C">B2C</option><option value="B2B">B2B</option></select>
-        <button type="button" aria-expanded={advanced} onClick={()=>setAdvanced(!advanced)} className="h-11 rounded-xl border border-[var(--color-border)] px-4 text-sm">فلاتر إضافية</button>
+        <Button variant="secondary" aria-expanded={advanced} onClick={()=>setAdvanced(!advanced)}><Funnel size={18} aria-hidden="true"/>فلاتر إضافية</Button>
       </div>
       {advanced?<div className="flex flex-wrap gap-2"><select aria-label="مصدر الطلب" value={source} onChange={e=>{setSource(e.target.value);setPage(1)}} className="h-11 rounded-xl border border-[var(--color-border)] bg-white px-3"><option value="">كل المصادر</option>{REQUEST_SOURCES.map(s=><option value={s} key={s}>{REQUEST_SOURCE_LABELS[s]}</option>)}</select>
-        {([['all','كل الأوقات'],['today','اليوم'],['week','7 أيام'],['month','30 يوم']] as const).map(([p,label])=><button key={p} type="button" onClick={()=>setPeriod(p)} className={'rounded-xl px-3 text-sm '+(period===p?'bg-[var(--color-text)] text-white':'bg-[var(--color-bg)]')}>{label}</button>)}
-        <Button size="sm" variant="ghost" onClick={reset}>مسح الفلاتر</Button></div>:null}
+        {([['all','كل الأوقات'],['today','اليوم'],['week','7 أيام'],['month','30 يوم']] as const).map(([p,label])=><button key={p} type="button" onClick={()=>setPeriod(p)} className={'min-h-11 cursor-pointer rounded-xl border px-3 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] '+(period===p?'border-[var(--color-text)] bg-[var(--color-text)] text-white':'border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[#F5EADD]')}>{label}</button>)}
+        <Button size="sm" variant="secondary" onClick={reset}><X size={16} aria-hidden="true"/>مسح الفلاتر</Button></div>:null}
     </section>
     {error?<p role="alert" className="text-sm text-red-700">تعذر تحديث القائمة. يتم عرض آخر بيانات محمّلة.</p>:null}
     <div className="flex items-center justify-between gap-3 text-xs text-[var(--color-text-muted)]"><p>{data.total} طلب مطابق للفلاتر الأساسية · {items.length} ظاهر بهذه الصفحة</p><p>تحديث تلقائي كل 30 ثانية</p></div>

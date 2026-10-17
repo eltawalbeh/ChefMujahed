@@ -7,6 +7,8 @@ import { DashboardLoading,DashboardError } from '@/components/dashboard/Dashboar
 import { RequestStatusBadge } from '@/components/dashboard/DashboardStatusBadge'
 import { formatJod } from '@/lib/format'
 import Button from '@/components/ui/Button'
+import DashboardBreadcrumbs from '@/components/dashboard/DashboardBreadcrumbs'
+import { X } from '@phosphor-icons/react'
 import CustomerProfileEditor, {fromCustomerProfile,customerPayload,validateCustomerProfile,type CustomerProfileDraft} from '@/components/dashboard/CustomerProfileEditor'
 
 export default function CustomerDetailsPage(){
@@ -35,7 +37,7 @@ export default function CustomerDetailsPage(){
     catch(err:any){setError(String(err?.message??'تعذر حفظ البيانات'))}finally{setSaving(false)}
   }
   return <main dir="rtl" className="mx-auto max-w-[1200px] space-y-5 p-4 lg:p-8">
-    <nav className="text-xs text-[var(--color-text-muted)]"><Link to="/dashboard/customers" className="underline">العملاء والشركات</Link> / {label}</nav>
+    <DashboardBreadcrumbs items={[{label:'العملاء والشركات',to:'/dashboard/customers'},{label}]}/>
     <header className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
       <div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-bold">{label}</h1><p className="mt-2 text-sm text-[var(--color-text-muted)]">{customer.customer_type==='B2B'?'حساب شركة B2B':'حساب أفراد B2C'} · {customer.phone||'بدون هاتف'}</p></div>
         {role!=='SUPERVISOR'?<Button variant="secondary" onClick={()=>{setDraft(fromCustomerProfile(customer));setError('');setEditing(true)}}>تعديل الملف والخصم</Button>:null}</div>
@@ -72,7 +74,7 @@ export default function CustomerDetailsPage(){
     </div>
     {editing&&draft?<div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4">
       <form onSubmit={save} role="dialog" aria-modal="true" aria-label="تعديل العميل" className="flex max-h-[95dvh] w-full max-w-3xl flex-col rounded-t-3xl bg-[var(--color-surface)] sm:rounded-3xl">
-        <div className="flex items-center justify-between border-b border-[var(--color-border)] p-4"><h2 className="text-lg font-bold">تعديل {label}</h2><button type="button" onClick={()=>setEditing(false)} aria-label="إغلاق">✕</button></div>
+        <div className="flex items-center justify-between border-b border-[var(--color-border)] p-4"><h2 className="text-lg font-bold">تعديل {label}</h2><Button variant="secondary" size="icon" onClick={()=>setEditing(false)} aria-label="إغلاق نافذة تعديل العميل" title="إغلاق"><X size={20}/></Button></div>
         <div className="overflow-y-auto p-4 md:p-6"><CustomerProfileEditor draft={draft} onChange={setDraft}/>{error?<p role="alert" className="mt-3 text-sm text-red-700">{error}</p>:null}</div>
         <div className="flex gap-2 border-t border-[var(--color-border)] p-4"><Button type="submit" disabled={saving}>{saving?'جاري الحفظ...':'حفظ التغييرات'}</Button><Button type="button" variant="ghost" onClick={()=>setEditing(false)}>إلغاء</Button></div>
       </form></div>:null}

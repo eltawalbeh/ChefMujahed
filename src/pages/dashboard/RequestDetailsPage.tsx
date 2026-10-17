@@ -5,6 +5,7 @@ import {
   addDashboardRequestNote, getDashboardRequest, linkDashboardRequestCustomer,
   updateDashboardItemDiscount, updateDashboardOrderDiscount, updateDashboardPayment,
   updateDashboardRequestStatus, markDashboardRequestPersonal,
+  getDashboardInvoiceAdjustments, addDashboardInvoiceAdjustment,
 } from '@/data/dashboard'
 import { useDashboard } from '@/state/DashboardContext'
 import { useSitePage } from '@/hooks/useSitePage'
@@ -16,6 +17,8 @@ import PaymentWorkflowPanel from '@/components/dashboard/PaymentWorkflowPanel'
 import DeliveryActions from '@/components/dashboard/DeliveryActions'
 import OrderDiscountEditor, { type DiscountType } from '@/components/dashboard/OrderDiscountEditor'
 import ItemDiscountEditor from '@/components/dashboard/ItemDiscountEditor'
+import InvoiceAdjustmentEditor from '@/components/dashboard/InvoiceAdjustmentEditor'
+import type { InvoiceAdjustmentSummary } from '@/data/dashboard'
 import { canLinkCustomers, canManagePricing } from '@/lib/dashboardPermissions'
 import { formatJod } from '@/lib/format'
 import Button from '@/components/ui/Button'
@@ -36,6 +39,8 @@ export default function RequestDetailsPage() {
   const [loadingError,setLoadingError]=useState(false)
   const [restricted,setRestricted]=useState(false)
   const [saving,setSaving]=useState(false)
+  const [adjustmentSummary,setAdjustmentSummary]=useState<InvoiceAdjustmentSummary|null>(null)
+  const [adjustmentError,setAdjustmentError]=useState('')
   const [feedback,setFeedback]=useState('')
   const [note,setNote]=useState('')
   const [tab,setTab]=useState<Tab>('work')
@@ -43,6 +48,14 @@ export default function RequestDetailsPage() {
   const contact=useSitePage<{paymentInstructions?:string}>('contact')
   const load=useCallback(async()=>{try{setLoadingError(false);setData(await getDashboardRequest(runtime,id))}catch{setLoadingError(true)}},[runtime,id])
   useEffect(()=>{void load()},[load])
+  useEffect(()=>{
+    let active=true
+    setAdjustmentSummary(null);setAdjustmentError('')
+    if(data?.request.invoice_issued_at)void getDashboardInvoiceAdjustments(runtime,id)
+      .then(s=>{if(active)setAdjustmentSummary(s)})
+      .catch(e=>{if(active)setAdjustmentError(String(e?.message??'تعذر تحميل سجل تعديلات الفاتورة'))})
+    return()=>{active=false}
+  },[runtime,id,data?.request.invoice_issued_at])
   const total=useMemo(()=>Number(data?.request.final_total_jod || data?.request.estimated_subtotal || 0),[data])
   const mutate=async (operation:()=>Promise<DashboardRequestDetail>, successMessage='تم حفظ التغييرات بنجاح')=>{
     setSaving(true);setFeedback('')
@@ -62,6 +75,16 @@ export default function RequestDetailsPage() {
   const editable=pricingRoleAllowed&&!invoiceIssued&&['NEW','CONTACT_REQUIRED','AWAITING_CONFIRMATION'].includes(request.status)
   const discountLockReason=invoiceIssued?'الفاتورة صدرت بالفعل ولا يمكن تغيير مبالغها. طبّق الخصومات على الطلبات الجديدة قبل تأكيد الدفع والاعتماد.':!pricingRoleAllowed?'تعديل الخصومات متاح للمدير ومدير النظام فقط.':'هذا الطلب مقفل للتسعير حسب حالته الحالية.'
   const currentDiscount=Number(request.discount_total_jod??request.discount_amount_jod??0)
+  const addInvoiceAdjustment=async(type:'PERCENT'|'FIXED',value:number,reason:string,itemId?:string)=>{
+    setSaving(true);setFeedback('')
+    try {
+      const result=await addDashboardInvoiceAdjustment(runtime,id,type,value,reason,itemId)
+      setAdjustmentSummary(result)
+      setFeedback('تم تسجيل مذكرة الخصم الاستثنائية مع السبب في سجل الطلب. الفاتورة الأصلية لم تتغير.')
+      await load()
+    }catch(e:any){const msg=String(e?.message??'تعذر تسجيل مذكرة الخصم');setFeedback(msg);throw e}
+    finally{setSaving(false)}
+  }
   const openBilling=()=>{
     setTab('billing')
     // Intentional navigation to the pricing section (ordinary tab switches do not scroll).
@@ -143,19 +166,34 @@ export default function RequestDetailsPage() {
       <div className="space-y-5">
         <Section title="التسعير والخصومات">
           <p className="mb-3 text-sm text-[var(--color-text-muted)]">خصم العميل الدائم: {formatJod(Number(request.customer_discount_jod??0))} {data.customer?'· من ملف العميل':'· اربط العميل لتطبيق خصمه'}</p>
-          <OrderDiscountEditor request={request} editable={editable} busy={saving} disabledReason={discountLockReason} onSave={(type:DiscountType,value,reason)=>mutate(()=>updateDashboardOrderDiscount(runtime,id,type,value,reason))}/>
+          {invoiceIssued?<>
+            <div className="mb-4 rounded-xl border border-[#E8D3AD] bg-[#FFF7E8] p-3 text-sm leading-6 text-[#6D472B]">
+              الفاتورة الأصلية صادرة ومقفلة. {pricingRoleAllowed?'يمكنك تسجيل مذكرة خصم لاحقة بشرح إجباري؛ لا تتغير مبالغ الفاتورة الأصلية.':'تعديل ما بعد الإصدار متاح فقط للمدير ومدير النظام.'}
+            </div>
+            {adjustmentError?<p role="alert" className="mb-3 text-sm text-red-700">{adjustmentError}</p>:null}
+            {pricingRoleAllowed&&adjustmentSummary?<InvoiceAdjustmentEditor summary={adjustmentSummary} busy={saving} onSave={addInvoiceAdjustment}/>:null}
+          </>:<>
+            {!editable?<div role="status" className="mb-4 rounded-xl border border-[#E8D3AD] bg-[#FFF7E8] p-3 text-sm">{discountLockReason}</div>:null}
+            <OrderDiscountEditor request={request} editable={editable} busy={saving} disabledReason={discountLockReason}
+              onSave={(type:DiscountType,value,reason)=>mutate(()=>updateDashboardOrderDiscount(runtime,id,type,value,reason))}/>
+          </>}
         </Section>
-        <Section title="خصومات المنتجات">
-           {!editable?<p className="mb-3 text-xs leading-6 text-[var(--color-text-muted)]">{discountLockReason}</p>:null}
-           <div className="space-y-1">
-             {data.items.map(item=><ItemDiscountEditor key={item.id} item={item} editable={editable} busy={saving}
-               onSave={amount=>mutate(()=>updateDashboardItemDiscount(runtime,id,item.id,amount),'تم حفظ خصم المنتج وتحديث الإجمالي')}/>)}
-           </div>
-         </Section>
+        <Section title={invoiceIssued?'خصومات استثنائية على المنتجات':'خصومات المنتجات'}>
+          {invoiceIssued?<>
+            <p className="mb-3 text-xs leading-6 text-[var(--color-text-muted)]">كل خصم منتج بعد إصدار الفاتورة يصدر كمذكرة جديدة، ولا يغير سعر البند في النسخة الأصلية.</p>
+            {pricingRoleAllowed&&adjustmentSummary?<div className="space-y-3">
+              {data.items.map(item=><InvoiceAdjustmentEditor key={item.id} item={item} summary={adjustmentSummary} busy={saving} onSave={addInvoiceAdjustment}/>)}
+            </div>:<p className="text-sm text-[var(--color-text-muted)]">{pricingRoleAllowed?'جاري تحميل سجل الخصومات...':'صلاحية الإضافة للمدير ومدير النظام فقط.'}</p>}
+          </>:<>
+            {!editable?<p className="mb-3 text-xs text-[var(--color-text-muted)]">{discountLockReason}</p>:null}
+            <div className="space-y-1">{data.items.map(item=><ItemDiscountEditor key={item.id} item={item} editable={editable} busy={saving}
+              onSave={amount=>mutate(()=>updateDashboardItemDiscount(runtime,id,item.id,amount),'تم حفظ خصم المنتج وتحديث الإجمالي')}/>)}</div>
+          </>}
+        </Section>
       </div>
       <div className="space-y-5">
         <Section title="الدفع"><PaymentWorkflowPanel request={request} busy={saving} onSave={async(s,m)=>{await mutate(()=>updateDashboardPayment(runtime,id,s,m))}}/></Section>
-        {request.invoice_issued_at?<InvoicePanel request={request} items={data.items}/>:<Section title="الفاتورة"><p className="text-sm text-[var(--color-text-muted)]">تصدر الفاتورة بعد اعتماد الدفع والطلب. يمكن تعديل الخصومات قبل ذلك فقط.</p></Section>}
+        {request.invoice_issued_at?<InvoicePanel request={request} items={data.items} adjustments={adjustmentSummary??undefined}/>:<Section title="الفاتورة"><p className="text-sm text-[var(--color-text-muted)]">تصدر الفاتورة بعد اعتماد الدفع والطلب. يمكن تعديل الخصومات قبل ذلك فقط.</p></Section>}
       </div>
     </div>:null}
     {tab==='history'?<div className="grid items-start gap-5 md:grid-cols-2"><Section title="ملاحظات داخلية">

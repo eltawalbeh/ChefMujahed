@@ -187,7 +187,7 @@ export default function ProductDetailsDrawer({
     </div>
   )
 }
-function Fact({ label, value }: { label: string value: string }) {
+function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <p className="text-xs text-[var(--color-text-muted)]">{label}</p>

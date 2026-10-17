@@ -156,6 +156,7 @@ export type DashboardProductImportPreview = {
 }
 
 export type DashboardProductImportResult = {
+  createdProducts?: Array<{nameAr:string;sku:string;channel:string}>;
   role: DashboardRole
   created: number
   updated: number

@@ -1,0 +1,24 @@
+name: Phase 59 Checkout + Payment Build
+on:
+  push:
+    branches: [phase-59-simple-products-checkout-payment]
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'supabase/migrations/20261017000400_simple_b2c_products_and_payment_choices.sql'
+      - '.github/workflows/phase59-build.yml'
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - name: TypeScript audit (known legacy errors reported)
+        continue-on-error: true
+        run: pnpm exec tsc --noEmit
+      - name: Production build
+        run: pnpm build

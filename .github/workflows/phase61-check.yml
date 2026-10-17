@@ -28,3 +28,15 @@ jobs:
           deno-version: v2.x
       - name: Edge Function syntax check
         run: deno check supabase/functions/product-share/index.ts
+      - name: Public product social preview smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://hqvxhhhwzhefydvwlpje.supabase.co/functions/v1/product-share?slug=cm-050&channel=B2C'
+          curl --retry 3 --retry-delay 2 --fail --silent --show-error "$URL" -o /tmp/cm-og-preview.html
+          grep -q 'property="og:image"' /tmp/cm-og-preview.html
+          grep -q 'Pumpkin Donut' /tmp/cm-og-preview.html
+          grep -q '/product/cm-050' /tmp/cm-og-preview.html
+          grep -q 'twitter:image' /tmp/cm-og-preview.html
+          STATUS="$(curl --silent --output /dev/null --write-out '%{http_code}' 'https://hqvxhhhwzhefydvwlpje.supabase.co/functions/v1/product-share?slug=missing-product-404&channel=B2C')"
+          test "$STATUS" = "404"

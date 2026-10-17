@@ -1,9 +1,9 @@
 import { formatJod } from '@/lib/format'
 import Button from '@/components/ui/Button'
-import { openInvoicePrint, openInvoiceAdjustmentPrint } from '@/domain/invoicePrint'
+import { openInvoicePrint } from '@/domain/invoicePrint'
 import type { InvoiceAdjustmentSummary } from '@/data/dashboard'
 import { Printer } from '@phosphor-icons/react'
-import { calculateInvoiceTotals, invoiceNumberForRequest, invoiceTaxRate } from '@/domain/invoice'
+import { calculateInvoiceTotals, invoiceNumberForRequest, invoiceTaxRate, customerInvoiceAdjustment } from '@/domain/invoice'
 
 type InvoicePanelProps = {
   request: Record<string, any>
@@ -35,6 +35,7 @@ export default function InvoicePanel({ request, items, adjustments }: InvoicePan
   const taxable = Number(request.taxable_amount_jod ?? Math.max(0, subtotal - discount))
   const tax = Number(request.tax_amount_jod ?? (taxable * taxRate / 100))
   const total = Number(request.final_total_jod ?? request.total_jod ?? taxable + tax)
+  const adjusted=customerInvoiceAdjustment(total,adjustments)
   const paymentLabel = request.payment_status === 'MONTHLY_B2B_ACCOUNT'
     ? 'حساب شركات شهري'
     : request.payment_status === 'CASH_ON_DELIVERY'
@@ -53,7 +54,7 @@ export default function InvoicePanel({ request, items, adjustments }: InvoicePan
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">رقم الفاتورة: {invoiceNumberForRequest(request)}</p>
           {issuedAt ? <p className="mt-1 text-xs text-[var(--color-text-muted)]">تاريخ الإصدار: {new Date(String(issuedAt)).toLocaleDateString('ar-JO')}</p> : null}
         </div>
-        <Button variant="secondary" onClick={()=>{if(!openInvoicePrint(request,items))window.alert('المتصفح منع فتح معاينة الطباعة. اسمح بفتح النوافذ المنبثقة للموقع ثم حاول مرة أخرى.')}}><Printer size={18} aria-hidden="true"/>طباعة / حفظ PDF</Button>
+        <Button variant="secondary" onClick={()=>{if(!openInvoicePrint(request,items,adjustments))window.alert('المتصفح منع فتح معاينة الطباعة. اسمح بفتح النوافذ المنبثقة للموقع ثم حاول مرة أخرى.')}}><Printer size={18} aria-hidden="true"/>طباعة / حفظ PDF</Button>
       </div>
 
       <div className="mt-4 space-y-3 border-t border-[var(--color-border)] pt-4 text-sm">
@@ -86,24 +87,13 @@ export default function InvoicePanel({ request, items, adjustments }: InvoicePan
         <div className="flex justify-between gap-4 font-semibold"><span>إجمالي الخصومات</span><span>{formatJod(discount)}</span></div>
         <div className="flex justify-between gap-4"><span className="text-[var(--color-text-muted)]">المبلغ الخاضع للضريبة</span><span>{formatJod(taxable)}</span></div>
         <div className="flex justify-between gap-4"><span className="text-[var(--color-text-muted)]">الضريبة ({taxRate}%)</span><span>{formatJod(tax)}</span></div>
-        <div className="flex justify-between gap-4 border-t border-[var(--color-border)] pt-3 text-base"><strong>الإجمالي</strong><strong>{formatJod(total)}</strong></div>
+        {adjusted.hasAdjustment ? <>
+          <div className="flex justify-between gap-4 border-t border-[var(--color-border)] pt-3"><span>الإجمالي قبل الخصم الإضافي</span><span dir="ltr">{formatJod(total)}</span></div>
+          <div className="flex justify-between gap-4"><span>خصم إضافي</span><span dir="ltr">- {formatJod(adjusted.discount)}</span></div>
+          <div className="flex justify-between gap-4 border-t border-[var(--color-border)] pt-3 text-base font-bold"><strong>الإجمالي النهائي</strong><strong dir="ltr">{formatJod(adjusted.finalTotal)}</strong></div>
+        </> : <div className="flex justify-between gap-4 border-t border-[var(--color-border)] pt-3 text-base"><strong>الإجمالي</strong><strong>{formatJod(total)}</strong></div>}
       </div>
 
-      {adjustments?.adjustments.length ? <div className="mt-5 rounded-xl border border-[#D9BA91] bg-[#FFF7EA] p-4">
-        <h3 className="font-bold">تعديلات استثنائية بعد إصدار الفاتورة</h3>
-        <p className="mt-1 text-xs leading-6">الفاتورة أعلاه نسخة أصلية محفوظة. التعديلات التالية منفصلة وموثقة ولا تعيد إصدار الفاتورة.</p>
-        <div className="mt-3 space-y-2">
-          {adjustments.adjustments.map(a=><div key={a.id} className="rounded-lg border border-[#E6D6C1] bg-white p-3 text-sm">
-            <div className="flex flex-wrap justify-between gap-2"><strong>مذكرة #{a.revision} · {a.item_id?'خصم منتج':'خصم الطلب'}</strong><bdi dir="ltr">- {formatJod(a.amount_jod)}</bdi></div>
-            <p className="mt-1 text-xs">{a.reason}</p>
-            <p className="mt-1 text-xs text-[var(--color-text-muted)]">{a.actor_name} · {new Date(a.created_at).toLocaleString('ar-JO')}</p>
-          </div>)}
-        </div>
-        <div className="mt-4 flex justify-between border-t border-[#D9BA91] pt-3 text-sm"><span>خصومات بعد الإصدار</span><strong dir="ltr">- {formatJod(adjustments.adjustments_total_jod)}</strong></div>
-        <div className="mt-2 flex justify-between text-base"><strong>{request.payment_status==='PAID'?'القيمة بعد الخصم (تحتاج تسوية المبلغ المدفوع)':'الرصيد بعد الخصم'}</strong><strong dir="ltr">{formatJod(adjustments.adjusted_balance_jod)}</strong></div>
-        <Button className="mt-3" variant="secondary" onClick={()=>{if(!openInvoiceAdjustmentPrint(request,adjustments))window.alert('اسمح بالنوافذ المنبثقة لطباعة مذكرة الخصم.')}}><Printer size={18}/>طباعة كشف التعديلات</Button>
-        {request.payment_status==='PAID'?<p className="mt-2 text-xs text-[#78552C]">تم الدفع مسبقًا؛ الخصم لا ينفذ استردادًا تلقائيًا، ويجب تسوية الفرق ماليًا.</p>:null}
-      </div>:null}
       <div className="mt-4 border-t border-[var(--color-border)] pt-4 text-xs leading-6 text-[var(--color-text-muted)]">
         {isB2B && request.payment_status === 'MONTHLY_B2B_ACCOUNT'
           ? 'هذا الطلب مرتبط بحساب شركات شهري، وتحدد شروط الاستحقاق بعد اعتماد الحساب.'

@@ -28,3 +28,26 @@ export function invoiceNumberForRequest(request: Record<string, unknown>) {
 export function invoiceTaxRate(request: Record<string, unknown>) {
   return Math.max(0, Number(request.tax_rate ?? request.vat_rate ?? 0) || 0)
 }
+
+/**
+ * Public-facing invoice discount presentation.
+ * Underlying issued invoice remains an immutable accounting snapshot.
+ * Post-issue adjustments are rendered as one consolidated discount row.
+ * Sensitive staff notes/reasons must NEVER be passed into printable invoice.
+ */
+export type CustomerInvoiceAdjustments = {
+  adjustments_total_jod: number
+  adjusted_balance_jod: number
+  adjustments: Array<{ amount_jod: number }>
+}
+export function customerInvoiceAdjustment(
+  originalTotal: number,
+  adjustment?: CustomerInvoiceAdjustments,
+): {discount: number; finalTotal: number; hasAdjustment: boolean} {
+  const original = Math.max(0, money(originalTotal))
+  if (!adjustment?.adjustments?.length) return { discount:0,finalTotal:original,hasAdjustment:false }
+  // Bound customer-facing total by original invoice and never show negative totals.
+  const sum = adjustment.adjustments.reduce((total,item) => total + Math.max(0,Number(item.amount_jod)||0),0)
+  const discount = Math.min(original,Math.max(0,money(sum)))
+  return {discount,finalTotal:money(original-discount),hasAdjustment:discount>0}
+}

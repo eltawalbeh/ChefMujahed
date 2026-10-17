@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowUpLeft } from '@phosphor-icons/react'
+import { ArrowsClockwise, PencilSimple, XCircle } from '@phosphor-icons/react'
 import {
   addDashboardRequestNote, getDashboardRequest, linkDashboardRequestCustomer,
   updateDashboardItemDiscount, updateDashboardOrderDiscount, updateDashboardPayment,
@@ -18,26 +18,10 @@ import OrderDiscountEditor, { type DiscountType } from '@/components/dashboard/O
 import { canLinkCustomers, canManagePricing } from '@/lib/dashboardPermissions'
 import { formatJod } from '@/lib/format'
 import Button from '@/components/ui/Button'
+import DashboardBreadcrumbs from '@/components/dashboard/DashboardBreadcrumbs'
 import { buildPaymentRequestMessage, buildWhatsAppUrl } from '@/lib/whatsapp'
 
 type Tab = 'work' | 'billing' | 'history'
-// Non-primary action: understated at rest, tactile on hover, focus and press.
-function InlineAction({ children, onClick, disabled = false, busy = false }: {
-  children: ReactNode
-  onClick: () => void
-  disabled?: boolean
-  busy?: boolean
-}) {
-  return <button
-    type="button"
-    onClick={onClick}
-    disabled={disabled || busy}
-    className="group -me-2 inline-flex min-h-11 max-w-full cursor-pointer items-center gap-2 rounded-lg border border-transparent px-2.5 py-2 text-right text-sm font-semibold text-[#6B4938] underline decoration-[#6B4938]/35 underline-offset-4 transition-[background-color,border-color,color,transform,text-decoration-color] duration-150 hover:-translate-y-0.5 hover:border-[#E1C9A7] hover:bg-[#F6EADD] hover:text-[#2E1E17] hover:decoration-current focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] active:translate-y-0 active:bg-[#EED9C1] disabled:cursor-not-allowed disabled:opacity-50 disabled:no-underline disabled:hover:translate-y-0"
-  >
-    <span>{children}</span>
-    <ArrowUpLeft aria-hidden="true" size={16} className="shrink-0 transition-transform duration-150 group-hover:-translate-x-0.5 group-hover:-translate-y-0.5" />
-  </button>
-}
 function Section({title,children,highlight=false}:{title:string;children:ReactNode;highlight?:boolean}) {
   return <section className={'rounded-2xl border p-4 md:p-6 '+(highlight?'border-[#D4AC68] bg-[#FFF7E7] shadow-[0_8px_24px_rgba(130,92,36,.10)]':'border-[var(--color-border)] bg-[var(--color-surface)]')}><h2 className="text-base font-bold">{title}</h2><div className="mt-4">{children}</div></section>
 }
@@ -93,7 +77,7 @@ export default function RequestDetailsPage() {
     window.open(buildWhatsAppUrl(msg,request.customer_phone_snapshot),'_blank','noopener,noreferrer')
   }
   return <main dir="rtl" className="mx-auto max-w-[1280px] space-y-5 p-4 pb-28 lg:p-8">
-    <nav className="text-xs text-[var(--color-text-muted)]"><Link to="/dashboard/requests" className="underline">الطلبات</Link> / {request.reference}</nav>
+    <DashboardBreadcrumbs items={[{label:'الطلبات',to:'/dashboard/requests'},{label:request.reference}]}/>
     <header className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 md:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div><div className="flex flex-wrap items-center gap-2"><h1 className="text-xl font-bold md:text-2xl">طلب #{request.reference}</h1><span className="rounded-lg bg-[var(--color-bg)] px-2 py-1 text-xs">{b2b?'B2B · شركات':'B2C · أفراد'}</span></div>
@@ -106,8 +90,8 @@ export default function RequestDetailsPage() {
         {(request.status==='NEW'||request.status==='CONTACT_REQUIRED')?<Button disabled={saving} onClick={()=>void mutate(()=>updateDashboardRequestStatus(runtime,id,'AWAITING_CONFIRMATION')).catch(()=>{})}>بدء متابعة الطلب</Button>:null}
         <DeliveryActions status={request.status} fulfillmentType={request.fulfillment_type} busy={saving} onChange={s=>void mutate(()=>updateDashboardRequestStatus(runtime,id,s)).catch(()=>{})}/>
         <a href={buildWhatsAppUrl('مرحباً، بخصوص طلبكم رقم '+request.reference,request.customer_phone_snapshot||'')} target="_blank" rel="noopener noreferrer"
-          className="inline-flex min-h-10 items-center rounded-lg border border-[var(--color-border)] px-3 text-sm">واتساب العميل</a>
-        {request.status!=='CANCELLED'&&request.status!=='COMPLETED'?<Button variant="ghost" disabled={saving} onClick={()=>{if(window.confirm('هل تريد إلغاء هذا الطلب؟'))void mutate(()=>updateDashboardRequestStatus(runtime,id,'CANCELLED')).catch(()=>{})}}>إلغاء الطلب</Button>:null}
+          className="inline-flex min-h-11 cursor-pointer items-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-sm font-semibold transition-colors hover:border-[#C9A989] hover:bg-[#F5EADD] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">واتساب العميل</a>
+        {request.status!=='CANCELLED'&&request.status!=='COMPLETED'?<Button variant="danger" disabled={saving} onClick={()=>{if(window.confirm('هل تريد إلغاء هذا الطلب؟'))void mutate(()=>updateDashboardRequestStatus(runtime,id,'CANCELLED')).catch(()=>{})}}><XCircle size={18} aria-hidden="true"/>إلغاء الطلب</Button>:null}
       </div>
     </header>
     {feedback?<p role="status" aria-live="polite" className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm">{feedback}</p>:null}
@@ -123,7 +107,7 @@ export default function RequestDetailsPage() {
           {data.possibleCustomers.length>0?<div className="mt-4 rounded-xl bg-[var(--color-bg)] p-3"><strong className="text-sm">عميل مسجل محتمل</strong>
             {data.possibleCustomers.slice(0,3).map(c=><div key={c.id} className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm"><span>{c.company_name||c.name} · {c.match_reason}</span>{canLinkCustomers(role)?<Button size="sm" variant="secondary" disabled={saving} onClick={()=>void mutate(()=>linkDashboardRequestCustomer(runtime,id,c.id)).catch(()=>{})}>ربط السجل</Button>:null}</div>)}
           </div>:null}
-          {b2b&&request.source==='WEBSITE'?<div className="mt-2"><InlineAction disabled={saving} busy={saving} onClick={convertToPersonal}>{saving?'جاري التحديث...':'تحويل إلى طلب شخصي'}</InlineAction></div>:null}
+          {b2b&&request.source==='WEBSITE'?<div className="mt-2"><Button variant="secondary" disabled={saving} onClick={convertToPersonal}><ArrowsClockwise size={18} aria-hidden="true"/>{saving?'جاري التحديث...':'تحويل إلى طلب شخصي'}</Button></div>:null}
         </Section>
         <Section title={'المنتجات · '+data.items.length}>
           <div className="divide-y divide-[var(--color-border)]">
@@ -147,7 +131,7 @@ export default function RequestDetailsPage() {
           <div className="space-y-2 text-sm"><div className="flex justify-between"><span>{formatJod(Number(request.estimated_subtotal??0))}</span><span>المنتجات</span></div>
           <div className="flex justify-between"><span>- {formatJod(currentDiscount)}</span><span>الخصومات</span></div>
           <div className="flex justify-between border-t border-[var(--color-border)] pt-2 font-bold"><span>{formatJod(total)}</span><span>الإجمالي</span></div></div>
-          <div className="mt-3"><InlineAction onClick={openBilling}>تعديل الخصومات وعرض الفاتورة</InlineAction></div>
+          <div className="mt-3"><Button variant="secondary" onClick={openBilling}><PencilSimple size={18} aria-hidden="true"/>تعديل الخصومات وعرض الفاتورة</Button></div>
         </Section>
       </div>
     </div>:null}

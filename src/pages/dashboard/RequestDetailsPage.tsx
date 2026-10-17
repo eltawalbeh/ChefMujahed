@@ -80,7 +80,7 @@ export default function RequestDetailsPage() {
     <DashboardBreadcrumbs items={[{label:'الطلبات',to:'/dashboard/requests'},{label:request.reference}]}/>
     <header className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 md:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div><div className="flex flex-wrap items-center gap-2"><h1 className="text-xl font-bold md:text-2xl">طلب #{request.reference}</h1><span className="rounded-lg bg-[var(--color-bg)] px-2 py-1 text-xs">{b2b?'B2B · شركات':'B2C · أفراد'}</span></div>
+        <div><div className="flex flex-wrap items-center gap-2"><h1 className="flex flex-wrap items-baseline gap-2 text-xl font-bold md:text-2xl"><span>طلب رقم</span><bdi dir="ltr">#{request.reference}</bdi></h1><span className="rounded-lg bg-[var(--color-bg)] px-2 py-1 text-xs">{b2b?'B2B · شركات':'B2C · أفراد'}</span></div>
           <p className="mt-2 text-sm text-[var(--color-text-muted)]">{name} · {request.fulfillment_type==='DELIVERY'?'توصيل':'استلام'} · {request.preferred_date||'الموعد غير محدد'} {request.preferred_time?.slice(0,5)||''}</p>
           <div className="mt-3 flex flex-wrap items-center gap-2"><RequestStatusBadge status={request.status}/><PaymentStatusBadge status={request.payment_status}/>{request.requires_reapproval?<span className="text-sm text-amber-700">يتطلب مراجعة جديدة</span>:null}</div>
         </div>

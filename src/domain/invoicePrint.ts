@@ -21,7 +21,8 @@ export function invoicePrintHtml(request:RequestData,items:LineData[]):string {
   const lineDiscount=money(items.reduce((total,x)=>total+num(x.discount_amount_jod),0))
   const customerDiscount=num(request.customer_discount_jod)
   const orderDiscount=num(request.order_discount_jod)
-  const totalDiscount=num(request.discount_total_jod??request.discount_amount_jod??lineDiscount)
+  // Historical issued invoices predate the Phase 53 field: use legacy booked discounts.
+  const totalDiscount=num(request.discount_total_jod)>0?num(request.discount_total_jod):num(request.discount_amount_jod)>0?num(request.discount_amount_jod):lineDiscount
   const taxable=num(request.taxable_amount_jod??Math.max(0,subtotal-totalDiscount))
   const rate=invoiceTaxRate(request)
   const tax=num(request.tax_amount_jod??(taxable*rate/100))

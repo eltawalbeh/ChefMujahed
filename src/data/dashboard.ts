@@ -386,6 +386,12 @@ export async function updateDashboardSitePage(
   })
 }
 
+/** Advisory SKU (never reserved): final SKU is assigned atomically by Supabase. */
+export async function previewNextProductSku(runtime: DashboardRuntime, channel: 'B2C'|'B2B'): Promise<string> {
+  if(runtime.mode==='preview') return 'CM-' + channel + '-0001'
+  return secureRpc<string>('dashboard_preview_next_product_sku',{p_channel:channel})
+}
+
 export async function createDashboardProduct(
   runtime: DashboardRuntime,
   payload: Record<string, unknown>,
@@ -396,7 +402,7 @@ export async function createDashboardProduct(
       ...result.product,
       id: 'preview-new-product',
       name_ar: String(payload.nameAr ?? 'منتج جديد'),
-      sku: String(payload.sku ?? 'PREVIEW-001'),
+      sku: 'CM-' + String(payload.channel ?? 'B2C') + '-0001',
       channel: String(payload.channel ?? 'B2C'),
       status: String(payload.availability ?? 'AVAILABLE') === 'AVAILABLE' ? 'ACTIVE' : 'INACTIVE',
       availability: String(payload.availability ?? 'AVAILABLE'),
@@ -413,13 +419,13 @@ export async function previewDashboardProductImport(
   if (runtime.mode === 'preview') {
     const previewRows = rows.map((row, index) => {
       const errors: string[] = []
-      if (!row.sku?.trim()) errors.push('SKU مطلوب')
+      // Blank SKU means new product: Supabase allocates it on import.
       if (!row.nameAr?.trim()) errors.push('اسم المنتج مطلوب')
       if (!['B2C', 'B2B'].includes(String(row.channel).toUpperCase())) errors.push('اختر قناة واحدة: B2C أو B2B')
       if (!['AVAILABLE', 'UNAVAILABLE'].includes(String(row.availability ?? 'AVAILABLE').toUpperCase())) errors.push('التوفر يجب أن يكون متاحاً أو غير متاح')
       return {
         row: index + 1,
-        sku: row.sku?.trim().toUpperCase() ?? '',
+        sku: row.sku?.trim().toUpperCase() || 'تلقائي عند الاستيراد',
         nameAr: row.nameAr?.trim() ?? '',
         channel: String(row.channel ?? '').toUpperCase(),
         availability: String(row.availability ?? 'AVAILABLE').toUpperCase(),
@@ -454,6 +460,7 @@ export async function importDashboardProducts(
       created: rows.length,
       updated: 0,
       total: rows.length,
+      createdProducts: rows.map((row,index)=>({nameAr:row.nameAr,channel:row.channel,sku:'CM-'+row.channel+'-'+String(index+1).padStart(4,'0')})),
     } satisfies DashboardProductImportResult
   }
   return secureRpc<DashboardProductImportResult>('dashboard_import_products', {

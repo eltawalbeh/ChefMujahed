@@ -65,9 +65,11 @@ export default function SubmittedBoundaryPage() {
 
   useEffect(() => {
     if (!reference || !recipient || openedForReference.current === reference || !navigator.onLine) return
+    const url=buildWhatsAppUrl(message,recipient)
+    if(!url){setWhatsAppState('failed');return}
     openedForReference.current = reference
     setWhatsAppState('opened')
-    window.location.assign(buildWhatsAppUrl(message, recipient))
+    window.location.assign(url)
   }, [message, recipient, reference])
 
   const copyFallback = async () => {

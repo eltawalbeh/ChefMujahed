@@ -1,5 +1,7 @@
 import { formatJod } from '@/lib/format'
-import BrandLogo from '@/components/public/BrandLogo'
+import Button from '@/components/ui/Button'
+import { openInvoicePrint } from '@/domain/invoicePrint'
+import { Printer } from '@phosphor-icons/react'
 import { calculateInvoiceTotals, invoiceNumberForRequest, invoiceTaxRate } from '@/domain/invoice'
 
 type InvoicePanelProps = {
@@ -41,14 +43,14 @@ export default function InvoicePanel({ request, items }: InvoicePanelProps) {
   const issuedAt = request.invoice_issued_at || request.issued_at
 
   return (
-    <section id="invoice-print" className="invoice-print rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 lg:p-6">
-      <div className="mb-5 hidden items-start justify-between gap-4 border-b border-[var(--color-border)] pb-5 print:flex"><div><BrandLogo/><p className="mt-2 text-xs text-[var(--color-text-muted)]">فاتورة مبيعات</p></div><div className="text-left text-xs text-[var(--color-text-muted)]">الأردن · JOD</div></div><div className="flex flex-wrap items-start justify-between gap-4">
+    <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 lg:p-6" dir="rtl">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="font-bold">الفاتورة</h2>
+          <h2 className="text-lg font-bold">فاتورة المبيعات <span className="text-xs font-medium text-[var(--color-text-muted)]">{isB2B?'· B2B':'· B2C'}</span></h2>
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">رقم الفاتورة: {invoiceNumberForRequest(request)}</p>
           {issuedAt ? <p className="mt-1 text-xs text-[var(--color-text-muted)]">تاريخ الإصدار: {new Date(String(issuedAt)).toLocaleDateString('ar-JO')}</p> : null}
         </div>
-        <button type="button" onClick={() => window.print()} className="min-h-11 rounded-lg border border-[var(--color-border)] px-3 text-sm font-semibold outline-none transition-colors hover:bg-[var(--color-bg)] focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 print:hidden">طباعة الفاتورة / PDF</button>
+        <Button variant="secondary" onClick={()=>{if(!openInvoicePrint(request,items))window.alert('المتصفح منع فتح معاينة الطباعة. اسمح بفتح النوافذ المنبثقة للموقع ثم حاول مرة أخرى.')}}><Printer size={18} aria-hidden="true"/>طباعة / حفظ PDF</Button>
       </div>
 
       <div className="mt-4 space-y-3 border-t border-[var(--color-border)] pt-4 text-sm">
@@ -59,13 +61,13 @@ export default function InvoicePanel({ request, items }: InvoicePanelProps) {
       </div>
 
       <div className="mt-5 overflow-hidden rounded-xl border border-[var(--color-border)]">
-        <div className="grid grid-cols-[1fr_auto_auto] gap-3 bg-[var(--color-bg)] px-3 py-2 text-xs text-[var(--color-text-muted)]">
-          <span>البند</span><span>الكمية</span><span>المبلغ</span>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-3 bg-[var(--color-bg)] px-3 py-2 text-xs font-semibold text-[var(--color-text-muted)]">
+          <span>المنتج</span><span>الكمية</span><span>الصافي</span>
         </div>
         <div className="divide-y divide-[var(--color-border)]">
           {lines.length ? lines.map((line) => (
             <div key={line.id} className="grid grid-cols-[1fr_auto_auto] gap-3 px-3 py-3 text-sm">
-              <span className="min-w-0">{line.description}</span>
+              <span className="min-w-0 break-words">{line.description}</span>
               <span>{line.quantity}</span>
               <strong>{formatJod(Math.max(0, line.quantity) * Math.max(0, line.unitPriceJod) - Math.max(0, line.discountJod ?? 0))}</strong>
             </div>
@@ -84,7 +86,7 @@ export default function InvoicePanel({ request, items }: InvoicePanelProps) {
         <div className="flex justify-between gap-4 border-t border-[var(--color-border)] pt-3 text-base"><strong>الإجمالي</strong><strong>{formatJod(total)}</strong></div>
       </div>
 
-      <div className="mt-4 border-t border-[var(--color-border)] pt-4 text-xs text-[var(--color-text-muted)]">
+      <div className="mt-4 border-t border-[var(--color-border)] pt-4 text-xs leading-6 text-[var(--color-text-muted)]">
         {isB2B && request.payment_status === 'MONTHLY_B2B_ACCOUNT'
           ? 'هذا الطلب مرتبط بحساب شركات شهري، وتحدد شروط الاستحقاق بعد اعتماد الحساب.'
           : 'الفاتورة خاضعة للمراجعة قبل اعتمادها النهائي.'}

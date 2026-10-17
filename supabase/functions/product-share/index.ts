@@ -25,7 +25,7 @@ Deno.serve(async(req)=>{
     const {data:imgs}=await db.from('product_images').select('image_url,is_primary,sort_order')
       .eq('product_id',product.id).eq('is_active',true).order('is_primary',{ascending:false}).order('sort_order',{ascending:true}).limit(4)
     const validImage=(imgs||[]).find(x=>{try{return new URL(x.image_url).protocol==='https:'}catch{return false}})?.image_url||''
-    const path=(channel==='B2B'?'/business/products/':'/products/')+encodeURIComponent(product.slug)
+    const path=(channel==='B2B'?'/business/product/':'/product/')+encodeURIComponent(product.slug)
     const canonical=origin+path
     const share=url.origin+url.pathname+'?slug='+encodeURIComponent(slug)+'&channel='+channel
     const title=product.name_ar+' | الشيف مجاهد'

@@ -9,9 +9,9 @@ const fixtures=[
   {name:'adjusted',count:1,b2b:true},
 ]
 for(const f of fixtures){
+ const isAdjusted=f.name==='adjusted'
  const items=Array.from({length:f.count},(_,i)=>({id:'i'+i,product_name_snapshot:'منتج مخبوزات رقم '+(i+1),unit_label_snapshot:'علبة',quantity:1,observed_base_price_jod:3,discount_amount_jod:isAdjusted?0:(i===0?1.5:0)}))
  const subtotal=f.count*3
- const isAdjusted=f.name==='adjusted'
  const request={...common,customer_type:f.b2b?'B2B':'B2C',company_name_snapshot:f.b2b?'شركة الاختبار للمخبوزات':null,payment_status:f.b2b?'MONTHLY_B2B_ACCOUNT':'PAID',estimated_subtotal:subtotal,final_total_jod:isAdjusted?subtotal:subtotal-1.5}
  const adjustment=isAdjusted?{adjustments_total_jod:1,adjusted_balance_jod:2,adjustments:[{amount_jod:1,reason:'PRIVATE: do not expose reason to customer',actor_name:'PRIVATE ADMIN'}]}:undefined
  const html=invoicePrintHtml(request,items,adjustment)

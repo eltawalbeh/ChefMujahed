@@ -31,7 +31,7 @@ Deno.serve(async(req)=>{
     const imageParams=new URLSearchParams({select:'image_url,is_primary,sort_order',
       product_id:'eq.'+product.id,is_active:'eq.true',order:'is_primary.desc,sort_order.asc',limit:'4'})
     const imgs=await getPublic('product_images?'+imageParams.toString())
-    const validImage=(imgs||[]).find(x=>{try{return new URL(x.image_url).protocol==='https:'}catch{return false}})?.image_url||''
+    const validImage=(imgs||[]).find((x:{image_url:string})=>{try{return new URL(x.image_url).protocol==='https:'}catch{return false}})?.image_url||''
     const path=(channel==='B2B'?'/business/product/':'/product/')+encodeURIComponent(product.slug)
     const canonical=origin+path
     const share=url.origin+url.pathname+'?slug='+encodeURIComponent(slug)+'&channel='+channel

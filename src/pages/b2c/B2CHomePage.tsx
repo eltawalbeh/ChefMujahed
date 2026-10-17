@@ -113,17 +113,12 @@ export default function B2CHomePage() {
 
         {/* ── Featured products ───────────────────────────────────────── */}
         <section className="mx-auto max-w-[1440px] px-4 py-14 md:px-16 md:py-20">
-          <AnimateIn animation="slide-up" className="mb-8 flex items-end justify-between gap-4">
-            <Link
-              to="/products"
-              className="text-sm font-semibold text-[var(--color-text-muted)] underline underline-offset-4"
-            >
-              عرض القائمة كاملة
-            </Link>
-            <div className="text-right">
+          <AnimateIn animation="slide-up" className="mb-8 flex flex-wrap items-end justify-between gap-4 text-right">
+            <div dir="rtl" className="order-first text-right">
               <p className="text-xs font-semibold text-[var(--color-accent)]">مختارات من قائمتنا</p>
               <h2 className="mt-2 text-2xl font-bold md:text-3xl">ابدأ من هنا</h2>
             </div>
+            <Link to="/products" className="text-sm font-semibold text-[var(--color-text-muted)] underline underline-offset-4">عرض القائمة كاملة</Link>
           </AnimateIn>
           {loading ? (
             <CatalogSkeleton />

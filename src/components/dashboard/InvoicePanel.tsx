@@ -25,7 +25,8 @@ export default function InvoicePanel({ request, items }: InvoicePanelProps) {
   const lines = items.map(lineFromItem)
   const calculated = calculateInvoiceTotals(lines, taxRate)
   const subtotal = Number(request.subtotal_jod ?? request.estimated_subtotal ?? calculated.subtotalJod)
-  const discount = Number(request.discount_total_jod ?? calculated.discountJod)
+  // Phase 53 fields default to zero even for historical issued invoices: preserve legacy totals.
+  const discount = Number(request.discount_total_jod)>0 ? Number(request.discount_total_jod) : Number(request.discount_amount_jod)>0 ? Number(request.discount_amount_jod) : Number(calculated.discountJod)
   const lineDiscount = Number(calculated.discountJod)
   const customerDiscount = Number(request.customer_discount_jod ?? 0)
   const orderDiscount = Number(request.order_discount_jod ?? 0)

@@ -131,6 +131,15 @@ export async function updateDashboardRequestStatus(
   })
 }
 
+export async function advanceDashboardManagerOrderStatus(
+  runtime:DashboardRuntime,id:string,status:string,
+):Promise<DashboardRequestDetail>{
+  if(runtime.mode==='preview')return previewRequestDetail(id)
+  return secureRpc<DashboardRequestDetail>('dashboard_manager_advance_request',{
+    p_request_id:id,p_status:status,
+  })
+}
+
 export async function updateDashboardPayment(
   runtime: DashboardRuntime,
   id: string,

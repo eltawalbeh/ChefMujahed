@@ -1,5 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { CaretDown } from '@phosphor-icons/react'
+import { getPublicProductBySlug } from '@/data/catalog'
+import { useEffect } from 'react'
 import { PencilSimple } from '@phosphor-icons/react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import PublicHeader from '@/components/public/PublicHeader'
@@ -21,6 +23,20 @@ function submissionFailureMessage(error: unknown) {
   return 'تعذر تسجيل الطلب حالياً. بياناتك محفوظة ويمكنك إعادة المحاولة بأمان.'
 }
 
+function ItemImage({imageUrl,productSlug,name}:{imageUrl?:string;productSlug:string;name:string}){
+  const [url,setUrl]=useState(imageUrl??'')
+  const [failed,setFailed]=useState(false)
+  useEffect(()=>{
+    let live=true;setUrl(imageUrl??'');setFailed(false)
+    if(!imageUrl&&productSlug)void getPublicProductBySlug(productSlug).then(p=>{
+      if(live)setUrl(p?.images?.find(i=>i.isPrimary)?.url??p?.images?.[0]?.url??'')
+    }).catch(()=>{})
+    return()=>{live=false}
+  },[imageUrl,productSlug])
+  return <div className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-lg bg-[var(--color-bg)] text-[var(--color-text-muted)]">
+    {url&&!failed?<img src={url} alt={name} loading="lazy" onError={()=>setFailed(true)} className="size-full object-cover"/>:<span aria-hidden="true">◫</span>}
+  </div>
+}
 function EditIcon() {
   return <PencilSimple size={16} aria-hidden="true" />
 }
@@ -196,10 +212,10 @@ export default function RequestReviewPage() {
 
       <section className="fixed inset-x-0 bottom-0 z-50 flex max-h-[calc(100dvh-10px)] flex-col overflow-hidden rounded-t-[26px] bg-[var(--color-surface)] shadow-[0_-8px_28px_rgba(29,23,20,.18)] md:hidden" role="dialog" aria-modal="true" aria-labelledby="review-title">
         <div className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-[var(--color-border)]" />
-        <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-3"><button type="button" onClick={() => navigate('/request/details')} className="grid size-10 place-items-center rounded-xl border border-[var(--color-border)]" aria-label="العودة للتعديل"><CaretDown size={20} /></button><div className="text-right"><strong id="review-title" className="block text-sm">مراجعة وتقديم الطلب</strong><span className="text-xs text-[var(--color-text-muted)]">الخطوة ٣ من ٣</span></div></div>
+        <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-3"><button type="button" onClick={() => navigate('/request/details')} className="grid size-10 place-items-center rounded-xl border border-[var(--color-border)]" aria-label="العودة للتعديل"><CaretDown size={20} /></button><div className="text-right"><strong id="review-title" className="block text-sm">مراجعة وتقديم الطلب</strong><span className="text-xs text-[var(--color-text-muted)]">Step 3 of 3</span></div></div>
         <div className="min-h-0 overflow-y-auto px-4 py-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
         <div className="mb-4 flex items-center justify-between text-xs">
-          <span className="text-[var(--color-text-muted)]">الخطوة ٣ من ٣</span>
+          <span className="text-[var(--color-text-muted)]">Step 3 of 3</span>
           <strong className="text-[var(--color-text-muted)]">مراجعة وتقديم الطلب</strong>
         </div>
 
@@ -218,6 +234,7 @@ export default function RequestReviewPage() {
             <div className="divide-y divide-[var(--color-border)]">
               {items.map((item) => (
                 <div key={item.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                  <ItemImage imageUrl={item.imageUrl} productSlug={item.productSlug} name={item.productName}/>
                   <div className="min-w-0 flex-1 text-right">
                     <p className="text-sm font-semibold text-[var(--color-text)]">{item.productName}</p>
                     <p className="mt-1 text-xs text-[var(--color-text-muted)]">
@@ -289,7 +306,7 @@ export default function RequestReviewPage() {
             <div className="space-y-3">
               {items.map((item) => (
                 <div key={item.id} dir="ltr" className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-white p-3">
-                  <div className="grid size-16 shrink-0 place-items-center rounded-lg bg-[var(--color-bg)] text-xl text-[var(--color-text-muted)]">◫</div>
+                  <ItemImage imageUrl={item.imageUrl} productSlug={item.productSlug} name={item.productName}/>
                   <div dir="rtl" className="min-w-0 flex-1 text-right">
                     <p className="text-sm font-semibold">{item.productName}</p>
                     <p className="mt-1 text-xs text-[var(--color-text-muted)]">

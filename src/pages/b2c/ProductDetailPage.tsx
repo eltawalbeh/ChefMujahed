@@ -148,7 +148,7 @@ export default function ProductDetailPage() {
 
   const orderableUnits = unitsForCustomerType(product.units, 'B2C')
   const canAdd =
-    Boolean(selectedUnitId) &&
+    (orderableUnits.length > 0 ? Boolean(selectedUnitId) : (product.basePriceJod != null && Number.isFinite(product.basePriceJod) && product.basePriceJod >= 0)) &&
     (product.customizationFields?.every((field) => {
       if (!field.required) return true
       const value = customization[field.id]
@@ -158,7 +158,7 @@ export default function ProductDetailPage() {
   const selectedUnit = orderableUnits.find((unit) => unit.id === selectedUnitId)
 
   function handleAddToRequest() {
-    if (!canAdd || !selectedUnit) return
+    if (!product || !canAdd) return
 
     const customizationLabels =
       product.customizationFields?.flatMap((field) => {
@@ -180,9 +180,10 @@ export default function ProductDetailPage() {
       productSlug: product.slug,
       productName: product.name,
       quantity,
-      unitId: selectedUnit.id,
-      unitLabel: selectedUnit.label,
-      observedBasePriceJod: selectedUnit.priceJod ?? product.basePriceJod,
+      unitId: selectedUnit?.id,
+      unitLabel: selectedUnit?.label ?? 'قطعة',
+      observedBasePriceJod: selectedUnit?.priceJod ?? product.basePriceJod,
+      imageUrl: product.images?.find(image=>image.isPrimary)?.url ?? product.images?.[0]?.url,
       customization,
       customizationLabels,
       notes: notes.trim() || undefined,
@@ -276,7 +277,7 @@ export default function ProductDetailPage() {
             </Button>
             {!canAdd ? (
               <p role="alert" className="mt-2 hidden text-center text-xs text-red-700 md:block">
-                {!orderableUnits.length ? 'المنتج بحاجة لإعداد وحدة بيع من إدارة المنتجات قبل طلبه إلكترونيًا.' : 'أكمل الخيارات المطلوبة قبل إضافة المنتج.'}
+                {!orderableUnits.length ? 'هذا المنتج غير مسعّر حاليًا.' : 'أكمل الخيارات المطلوبة قبل إضافة المنتج.'}
               </p>
             ) : null}
           </div>

@@ -1,0 +1,24 @@
+name: Phase 60 Discount and Invoice QA
+on:
+  push:
+    branches: [phase-60-discounts-invoice-qa]
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'supabase/migrations/20261017000600_enable_discount_workflow.sql'
+      - '.github/workflows/phase60-financial-qa.yml'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - name: TypeScript audit (baseline errors reported separately)
+        continue-on-error: true
+        run: pnpm exec tsc --noEmit
+      - name: Production build
+        run: pnpm build

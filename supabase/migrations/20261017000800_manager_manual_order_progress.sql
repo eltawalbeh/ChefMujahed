@@ -15,6 +15,12 @@ BEGIN
   SELECT status,fulfillment_type INTO v_current,v_fulfillment
   FROM public.requests WHERE id=p_request_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Request not found'; END IF;
+  -- A manager may mark a physically completed order ready directly.
+  -- Both ordinary status transitions are still recorded and validated atomically.
+  IF v_current='APPROVED' AND p_status='READY' THEN
+    PERFORM public.dashboard_update_request_status(p_request_id,'PREPARING');
+    RETURN public.dashboard_update_request_status(p_request_id,'READY');
+  END IF;
   IF v_current='APPROVED' THEN v_next:='PREPARING';
   ELSIF v_current='PREPARING' THEN v_next:='READY';
   ELSIF v_current='READY' AND v_fulfillment='DELIVERY' THEN v_next:='OUT_FOR_DELIVERY';

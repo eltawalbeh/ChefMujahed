@@ -260,6 +260,33 @@ export async function listDashboardProducts(
   )
 }
 
+export type BulkProductAction = 'SHOW' | 'HIDE' | 'CHANNEL' | 'DELETE'
+export type BulkProductResult = { changed: number; action: BulkProductAction; results: Array<{id:string;action:string;channel?:string}> }
+
+/** One atomic backend operation — never loop individual product mutations from the UI. */
+export async function bulkManageDashboardProducts(
+  runtime: DashboardRuntime,
+  productIds: string[],
+  action: BulkProductAction,
+  channel?: 'B2B' | 'B2C',
+): Promise<BulkProductResult> {
+  if (productIds.length<1 || productIds.length>50) throw new Error('اختر من 1 إلى 50 منتجًا من الصفحة الحالية.')
+  if(runtime.mode==='preview') {
+    const selection = new Set(productIds)
+    for (const product of previewProducts) {
+      if (!selection.has(product.id)) continue
+      if (action==='SHOW') { product.status='ACTIVE';product.availability='AVAILABLE';product.public_visible=true }
+      if (action==='HIDE') { product.status='INACTIVE';product.availability='UNAVAILABLE';product.public_visible=false }
+      if (action==='CHANNEL' && channel) product.channel=channel
+      if (action==='DELETE') { product.status='ARCHIVED';product.availability='UNAVAILABLE';product.public_visible=false }
+    }
+    return {changed:productIds.length, action,results:productIds.map(id=>({id,action}))}
+  }
+  return secureRpc<BulkProductResult>('dashboard_bulk_manage_products',{
+    p_product_ids:productIds,p_action:action,p_channel:action==='CHANNEL'?channel:null,
+  })
+}
+
 export async function getDashboardProduct(
   runtime: DashboardRuntime,
   id: string,

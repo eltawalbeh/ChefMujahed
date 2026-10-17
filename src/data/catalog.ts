@@ -210,10 +210,15 @@ async function hydrateProducts(rows: ProductRow[], withCustomization = false): P
 }
 
 export async function getPublicCategories(): Promise<CatalogCategory[]> {
-  const {data, error} = await supabase.from('categories')
-    .select('id,name_ar,slug,sort_order').eq('is_active', true).order('sort_order', {ascending: true})
-  if (error) throw error
-  return (data ?? []).map((item) => ({ id:item.id, label:item.name_ar, slug:item.slug }))
+  try {
+    const {data, error} = await supabase.from('categories')
+      .select('id,name_ar,slug,sort_order').eq('is_active', true).order('sort_order', {ascending: true})
+    if (error) throw error
+    return (data ?? []).map((item) => ({ id:item.id, label:item.name_ar, slug:item.slug }))
+  } catch {
+    // Category chips are optional: an error must not block the product list.
+    return []
+  }
 }
 
 async function getProductsForChannels(channels: ProductChannel[], categoryId?: string): Promise<Product[]> {

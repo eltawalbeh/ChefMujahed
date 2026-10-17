@@ -29,7 +29,7 @@ function ItemImage({imageUrl,productSlug,name}:{imageUrl?:string;productSlug:str
   useEffect(()=>{
     let live=true;setUrl(imageUrl??'');setFailed(false)
     if(!imageUrl&&productSlug)void getPublicProductBySlug(productSlug).then(p=>{
-      if(live)setUrl(p?.images.find(i=>i.isPrimary)?.url??p?.images[0]?.url??'')
+      if(live)setUrl(p?.images?.find(i=>i.isPrimary)?.url??p?.images?.[0]?.url??'')
     }).catch(()=>{})
     return()=>{live=false}
   },[imageUrl,productSlug])

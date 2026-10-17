@@ -138,6 +138,7 @@ declare
   v_row jsonb; v_unit jsonb; v_product_id uuid; v_category_id uuid;
   v_sku text; v_channel text; v_unit_channel text; v_price numeric; v_availability text;
   v_status text; v_created int:=0; v_updated int:=0; v_duplicate_count int;
+  v_created_rows jsonb:='[]'::jsonb;
 begin
   perform public.dashboard_assert_role(array['SUPER_ADMIN','ADMIN']);
   if jsonb_typeof(payload->'rows')<>'array' then raise exception 'rows must be array'; end if;
@@ -165,6 +166,7 @@ begin
       insert into public.products(category_id,name_ar,slug,sku,status,availability,channel,base_price_jod,public_visible,b2b_allow_custom_unit,short_description_ar,long_description_ar)
       values(v_category_id,trim(v_row->>'nameAr'),coalesce(nullif(v_row->>'slug',''),lower(regexp_replace(v_sku,'[^A-Z0-9]+','-','g'))),v_sku,v_status,v_availability,v_channel,nullif(v_row->>'basePriceJod','')::numeric,(v_availability='AVAILABLE'),coalesce((v_row->>'b2bAllowCustomUnit')::boolean,false),nullif(v_row->>'shortDescriptionAr',''),nullif(v_row->>'longDescriptionAr','')) returning id into v_product_id;
       v_created:=v_created+1;
+      v_created_rows:=v_created_rows||jsonb_build_array(jsonb_build_object('nameAr',trim(v_row->>'nameAr'),'sku',v_sku,'channel',v_channel));
     else
       v_status:=case when v_status='ARCHIVED' then 'ARCHIVED' when v_availability='AVAILABLE' then 'ACTIVE' else 'INACTIVE' end;
       update public.products p set
@@ -191,7 +193,7 @@ begin
       end loop;
     end if;
   end loop;
-  return jsonb_build_object('created',v_created,'updated',v_updated,'total',v_created+v_updated);
+  return jsonb_build_object('created',v_created,'updated',v_updated,'total',v_created+v_updated,'createdProducts',v_created_rows);
 end;
 $function$
 ;

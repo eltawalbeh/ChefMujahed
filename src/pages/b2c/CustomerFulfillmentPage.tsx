@@ -8,6 +8,8 @@ import RequestItemRow from '@/components/request/RequestItemRow'
 import RequestSummary from '@/components/request/RequestSummary'
 import SectionCard from '@/components/request/SectionCard'
 import { FormField, TextAreaField } from '@/components/request/FormField'
+import PhoneField from '@/components/request/PhoneField'
+import { normalizePhoneToE164 } from '@/lib/phone'
 import FulfillmentToggle from '@/components/request/FulfillmentToggle'
 import { useRequestDraft } from '@/state/RequestDraftContext'
 
@@ -37,7 +39,7 @@ export default function CustomerFulfillmentPage() {
       errors.name = 'يرجى إدخال الاسم الكامل.'
     }
 
-    if (customer.phone.trim().length < 7) {
+    if (!normalizePhoneToE164(customer.phone)) {
       errors.phone = 'يرجى إدخال رقم هاتف صالح.'
     }
 
@@ -58,7 +60,7 @@ export default function CustomerFulfillmentPage() {
 
   const canContinue =
     customer.name.trim().length >= 2 &&
-    customer.phone.trim().length >= 7 &&
+    Boolean(normalizePhoneToE164(customer.phone)) &&
     Boolean(fulfillment.preferredDate) &&
     Boolean(fulfillment.preferredTime) &&
     (fulfillment.type === 'COLLECTION' || Boolean(fulfillment.address?.trim()))
@@ -140,16 +142,12 @@ export default function CustomerFulfillmentPage() {
               />
 
               <div className="grid gap-4 md:grid-cols-2">
-                <FormField
-                  label="رقم الهاتف"
+                <PhoneField
+                  label="رقم الهاتف (واتساب)"
                   name="customer-phone"
                   error={showErrors ? validationErrors.phone : undefined}
                   value={customer.phone}
-                  onChange={(event) =>
-                    setCustomer({ ...customer, phone: event.target.value })
-                  }
-                  placeholder="+962 7X XXX XXXX"
-                  inputMode="tel"
+                  onChange={phone=>setCustomer({ ...customer, phone })}
                   required
                 />
 

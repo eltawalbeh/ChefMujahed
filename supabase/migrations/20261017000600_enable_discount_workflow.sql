@@ -275,7 +275,7 @@ END; $$;
 
 -- Recalculate when a request is linked to a known customer, without repricing invoices.
 CREATE OR REPLACE FUNCTION public.dashboard_link_request_customer(p_request_id uuid,p_customer_id uuid)
-RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,auth AS $
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,auth AS $$
 DECLARE v_role text; v_req public.requests%rowtype; v_customer_type text;
 BEGIN
   v_role:=public.dashboard_assert_role(ARRAY['SUPER_ADMIN','ADMIN']);
@@ -289,7 +289,7 @@ BEGIN
   VALUES(p_request_id,'CUSTOMER_LINKED','تم ربط الطلب بعميل موجود يدوياً',auth.uid(),
     jsonb_build_object('customerId',p_customer_id,'role',v_role));
   RETURN public.dashboard_get_request(p_request_id);
-END; $;
+END; $$;
 
 
 

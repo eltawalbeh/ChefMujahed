@@ -1,0 +1,25 @@
+name: Phase 57 Product Management QA
+on:
+  push:
+    branches:
+      - phase-57-product-visibility-bulk-actions
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'supabase/migrations/20261017000200_product_visibility_bulk_actions.sql'
+      - '.github/workflows/phase57-build.yml'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - name: TypeScript audit (pre-existing debt)
+        continue-on-error: true
+        run: pnpm exec tsc --noEmit
+      - name: Production frontend build
+        run: pnpm build

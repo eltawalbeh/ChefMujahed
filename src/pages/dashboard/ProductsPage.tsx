@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Eye, EyeSlash, PencilSimple, Trash, X, Plus, CheckSquare, Square, ArrowUUpLeft, ArrowsClockwise } from '@phosphor-icons/react'
+import { Eye, EyeSlash, PencilSimple, Trash, X, Plus } from '@phosphor-icons/react'
 import Button from '@/components/ui/Button'
 import { Link } from 'react-router-dom'
 import { bulkManageDashboardProducts, getDashboardProduct, listDashboardProducts, type BulkProductAction } from '@/data/dashboard'
@@ -158,7 +158,7 @@ export default function ProductsPage(){
   </main>
 }
 function Filter({label,value,onChange,options}:{label:string;value:string;onChange:(v:string)=>void;options:Array<[string,string]>}){
-  return <label className="sr-only">{label}<select aria-label={label} value={value} onChange={e=>onChange(e.target.value)} className="h-11 w-full rounded-xl border border-[var(--color-border)] bg-white px-3 text-sm">
+  return <label className="block"><span className="sr-only">{label}</span><select aria-label={label} value={value} onChange={e=>onChange(e.target.value)} className="h-11 w-full rounded-xl border border-[var(--color-border)] bg-white px-3 text-sm">
     {options.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>
 }
 function VisibilityStatus({shown,archived}:{shown:boolean;archived:boolean}) {

@@ -1,4 +1,6 @@
 import { appConfig } from '@/app/config'
+import { whatsAppDigits } from '@/lib/phone'
+import type { RequestStatus } from '@/types/request'
 import { REQUEST_SEMANTICS } from '@/domain/constants'
 import type {
   B2BCompanyDraft,
@@ -21,10 +23,6 @@ export type PaymentRequestMessagePayload = {
   customerName?: string | null
   totalJod: number
   instructions: string
-}
-
-function cleanPhone(value: string) {
-  return value.replace(/[^\d]/g, '')
 }
 
 function itemLines(items: RequestItem[]) {
@@ -110,12 +108,30 @@ export function buildPaymentRequestMessage({
   return lines.join('\n')
 }
 
-export function buildWhatsAppUrl(message: string, recipient?: string | null) {
-  const text = encodeURIComponent(message)
-  const number = cleanPhone(recipient?.trim() || appConfig.whatsappNumber)
-  return number
-    ? `https://wa.me/${number}?text=${text}`
-    : `https://api.whatsapp.com/send?text=${text}`
+export function buildWhatsAppUrl(message:string, recipient?:string|null){
+  const input=recipient===undefined||recipient===null ? appConfig.whatsappNumber : recipient
+  const number=whatsAppDigits(input)
+  // Never send a customer update to the shop's phone as a fallback.
+  if(!number)return ''
+  return 'https://wa.me/'+number+'?text='+encodeURIComponent(message)
+}
+
+export type OrderMessageStatus = Extract<RequestStatus,'APPROVED'|'PREPARING'|'READY'|'OUT_FOR_DELIVERY'|'COMPLETED'>
+export function buildOrderStatusWhatsAppMessage({
+  reference,customerName,status,fulfillmentType,
+}:{
+  reference:string;customerName?:string|null;status:OrderMessageStatus;
+  fulfillmentType:'DELIVERY'|'COLLECTION';
+}){
+  const heading=customerName?.trim()?'مرحباً '+customerName.trim()+'،':'مرحباً،'
+  const statusText:Record<OrderMessageStatus,string>={
+    APPROVED:'تم تأكيد واعتماد طلبكم، وسيتم تحضيره وفق التفاصيل المتفق عليها.',
+    PREPARING:'بدأ فريق الشيف مجاهد تحضير طلبكم.',
+    READY:fulfillmentType==='COLLECTION'?'طلبكم جاهز للاستلام من الشيف مجاهد.':'طلبكم جاهز، ونعمل على ترتيبات توصيله.',
+    OUT_FOR_DELIVERY:'طلبكم الآن في طريقه للتوصيل.',
+    COMPLETED:fulfillmentType==='COLLECTION'?'تم تسجيل استلام طلبكم. شكراً لثقتكم بنا.':'تم تسجيل تسليم طلبكم. شكراً لثقتكم بنا.',
+  }
+  return [heading,'تحديث بخصوص طلبكم من الشيف مجاهد رقم '+reference+':',statusText[status],'','فريق الشيف مجاهد'].join('\n')
 }
 
 export async function copyText(text: string) {

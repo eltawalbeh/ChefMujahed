@@ -1,6 +1,5 @@
 import { FormEvent, useMemo, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { ArrowRight } from '@phosphor-icons/react'
 import PublicHeader from '@/components/public/PublicHeader'
 import PublicFooter from '@/components/public/PublicFooter'
 import Button from '@/components/ui/Button'
@@ -25,7 +24,6 @@ export default function CustomerFulfillmentPage() {
     setGeneralNotes,
     updateQuantity,
     removeItem,
-    openRequest,
   } = useRequestDraft()
 
   const [showErrors, setShowErrors] = useState(false)
@@ -65,8 +63,6 @@ export default function CustomerFulfillmentPage() {
 
   if (!items.length) return <Navigate to="/" replace />
 
-  const returnToCart=()=>{navigate('/');openRequest()}
-
   const submit = (event: FormEvent) => {
     event.preventDefault()
     setShowErrors(true)
@@ -86,9 +82,8 @@ export default function CustomerFulfillmentPage() {
       >
         <div dir="rtl" className="order-0 col-span-full flex items-center justify-between text-sm text-[var(--color-text-muted)]">
           <strong className="text-[var(--color-text)]">تفاصيل الطلب والاستلام</strong>
-          <span><span lang="en" dir="ltr">Step 2 of 3</span></span>
+          <span>الخطوة ٢ من ٣</span>
         </div>
-        <div dir="rtl" className="order-0 col-span-full -mt-4"><Button variant="secondary" onClick={returnToCart}><ArrowRight size={18} aria-hidden="true"/>العودة إلى السلة</Button></div>
         <aside dir="rtl" className="order-2 md:order-1">
           <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)]">
             <div className="flex items-center justify-between border-b border-[var(--color-border)] p-5">

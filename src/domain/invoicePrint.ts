@@ -111,3 +111,44 @@ export function openInvoicePrint(request:RequestData,items:LineData[]):boolean {
   popup.focus()
   return true
 }
+
+
+/** Supplementary discount notice, not a replacement for the originally issued tax invoice. */
+export function invoiceAdjustmentPrintHtml(
+  request:Record<string,any>,
+  summary:{original_total_jod:number;adjustments_total_jod:number;adjusted_balance_jod:number;adjustments:Array<Record<string,any>>}
+):string{
+  const adjustmentRows=summary.adjustments.map(a=>`<tr><td>${e(a.revision)}</td><td>${e(a.item_id?'خصم بند':'خصم الفاتورة')}</td>
+    <td>${e(a.reason)}</td><td>${e(a.actor_name)} · ${e(date(a.created_at))}</td>
+    <td dir="ltr">- ${currency(a.amount_jod)}</td></tr>`).join('')
+  return `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8">
+    <title>مذكرة خصومات · ${e(invoiceNumberForRequest(request))}</title>
+    <style>@page{size:A4;margin:14mm}*{box-sizing:border-box}body{color:#271c15;font:12px/1.55 Arial,Tahoma,sans-serif}
+    h1{font-size:21px;margin:0 0 8px}h2{font-size:15px;margin:12px 0}small,p{color:#6d5548}
+    .heading{border-bottom:2px solid #35251d;padding-bottom:12px;margin-bottom:18px}
+    table{border-collapse:collapse;width:100%;table-layout:fixed}td,th{border-bottom:1px solid #e3d4c8;text-align:right;padding:9px 7px;overflow-wrap:anywhere}
+    th{background:#f6eee6}.amount{direction:ltr;white-space:nowrap;text-align:left}
+    .summary{margin-top:20px;break-inside:avoid;border-top:2px solid #35251d;padding-top:10px}
+    .sumline{display:flex;justify-content:space-between;margin:8px 0}.grand{font-size:16px;font-weight:bold}
+    tr{break-inside:avoid}thead{display:table-header-group}.print{margin-bottom:16px;cursor:pointer;padding:10px 16px}
+    @media print{.print{display:none}}</style></head><body>
+    <button class="print" onclick="window.print()">طباعة / PDF</button>
+    <div class="heading"><h1>الشيف مجاهد · كشف تعديلات بعد الفاتورة</h1>
+      <p>هذا كشف خصومات تكميلي وليس إعادة إصدار أو تعديلًا للفاتورة الأصلية.</p>
+      <strong>الفاتورة المرجعية: <bdi dir="ltr">${e(invoiceNumberForRequest(request))}</bdi></strong></div>
+    <h2>سجل الخصومات المعتمدة</h2>
+    <table><thead><tr><th>رقم</th><th>النطاق</th><th>السبب</th><th>بواسطة / التاريخ</th><th>المبلغ</th></tr></thead>
+    <tbody>${adjustmentRows}</tbody></table>
+    <div class="summary"><div class="sumline"><span>إجمالي الفاتورة الأصلية</span><bdi dir="ltr">${currency(summary.original_total_jod)}</bdi></div>
+      <div class="sumline"><span>خصومات بعد الإصدار</span><bdi dir="ltr">- ${currency(summary.adjustments_total_jod)}</bdi></div>
+      <div class="sumline grand"><span>${request.payment_status==='PAID'?'القيمة بعد التعديل (تحقق من أي مبلغ مسترد)':'المبلغ بعد التعديلات'}</span>
+      <bdi dir="ltr">${currency(summary.adjusted_balance_jod)}</bdi></div></div>
+    <p>إذا كانت الفاتورة مدفوعة، فالتسوية أو الاسترداد المالي إجراء مستقل ويجب توثيقه. قد يلزم إشعار دائن ضريبي رسمي وفق متطلبات المحاسب.</p>
+    </body></html>`
+}
+export function openInvoiceAdjustmentPrint(request:Record<string,any>,summary:Parameters<typeof invoiceAdjustmentPrintHtml>[1]):boolean{
+  const popup=window.open('','_blank','width=960,height=880')
+  if(!popup)return false
+  popup.document.open();popup.document.write(invoiceAdjustmentPrintHtml(request,summary));popup.document.close();popup.focus()
+  return true
+}

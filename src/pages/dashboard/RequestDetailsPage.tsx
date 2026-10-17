@@ -90,7 +90,7 @@ export default function RequestDetailsPage() {
         {(request.status==='NEW'||request.status==='CONTACT_REQUIRED')?<Button disabled={saving} onClick={()=>void mutate(()=>updateDashboardRequestStatus(runtime,id,'AWAITING_CONFIRMATION')).catch(()=>{})}>بدء متابعة الطلب</Button>:null}
         <DeliveryActions status={request.status} fulfillmentType={request.fulfillment_type} busy={saving} onChange={s=>void mutate(()=>updateDashboardRequestStatus(runtime,id,s)).catch(()=>{})}/>
         <a href={buildWhatsAppUrl('مرحباً، بخصوص طلبكم رقم '+request.reference,request.customer_phone_snapshot||'')} target="_blank" rel="noopener noreferrer"
-          className="inline-flex min-h-11 cursor-pointer items-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-sm font-semibold transition-colors hover:border-[#C9A989] hover:bg-[#F5EADD] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]">واتساب العميل</a>
+          className="inline-flex min-h-11 cursor-pointer items-center rounded-xl border border-[var(--color-border)] bg-[#25D366] px-4 text-sm font-semibold text-[#102C1D] transition-[background-color,transform,box-shadow] hover:-translate-y-px hover:bg-[#1EBC59] hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#087E34] active:translate-y-0 active:bg-[#159B47]">واتساب العميل</a>
         {request.status!=='CANCELLED'&&request.status!=='COMPLETED'?<Button variant="danger" disabled={saving} onClick={()=>{if(window.confirm('هل تريد إلغاء هذا الطلب؟'))void mutate(()=>updateDashboardRequestStatus(runtime,id,'CANCELLED')).catch(()=>{})}}><XCircle size={18} aria-hidden="true"/>إلغاء الطلب</Button>:null}
       </div>
     </header>

@@ -495,3 +495,19 @@ export async function markDashboardRequestPersonal(runtime: DashboardRuntime, id
   if (runtime.mode === 'preview') throw new Error('لا يمكن إعادة تصنيف الطلب في وضع المعاينة.')
   return secureRpc<DashboardRequestDetail>('dashboard_mark_request_personal', { p_request_id: id })
 }
+
+export async function updateDashboardOrderDiscount(
+  runtime: DashboardRuntime,
+  requestId: string,
+  type: 'NONE' | 'PERCENT' | 'FIXED',
+  value: number,
+  reason: string,
+) {
+  if (runtime.mode === 'preview') return previewRequestDetail(requestId)
+  return secureRpc<DashboardRequestDetail>('dashboard_set_order_discount', {
+    p_request_id: requestId,
+    p_discount_type: type,
+    p_discount_value: value,
+    p_reason: reason.trim() || null,
+  })
+}

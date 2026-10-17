@@ -233,6 +233,8 @@ export default function ContentManagementPage() {
   const [error, setError] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [dirty, setDirty] = useState(() => Boolean(readDraft(selected)))
+  const [saveNotice, setSaveNotice] = useState('')
   const canEdit = runtime.mode === 'preview' || canManageContent(role)
 
   const load = useCallback(async (force = false) => {
@@ -240,6 +242,8 @@ export default function ContentManagementPage() {
       if (!force) { const cached = contentCache.get(selected) ?? readDraft(selected); if (cached) { contentCache.set(selected, cached); setContentPair(cached); return } }
       setError(false)
       setSaved(false)
+      setSaveNotice('')
+      if (force) { clearDraft(selected); setDirty(false) }
       const result = await getDashboardSitePage(runtime, selected)
       const next = { ar: result.content, en: result.contentEn ?? {} }
       contentCache.set(selected, next)
@@ -249,7 +253,7 @@ export default function ContentManagementPage() {
     }
   }, [runtime, selected])
 
-  useEffect(() => { void load() }, [selected])
+  useEffect(() => { setDirty(Boolean(readDraft(selected))); setSaveNotice(''); void load() }, [selected])
 
   const schema = useMemo(() => pageSchema[selected], [selected])
   if (error) return <DashboardError onRetry={() => void load()} />
@@ -262,6 +266,8 @@ export default function ContentManagementPage() {
     writeDraft(selected, pair)
     setContentPair(pair)
     setSaved(false)
+    setDirty(true)
+    setSaveNotice('')
   }
 
   const setSharedImage = (key: string, value: string) => {
@@ -273,6 +279,8 @@ export default function ContentManagementPage() {
     writeDraft(selected, pair)
     setContentPair(pair)
     setSaved(false)
+    setDirty(true)
+    setSaveNotice('')
   }
 
   const setPage = (pageKey: SitePageKey) => {
@@ -291,15 +299,17 @@ export default function ContentManagementPage() {
       clearDraft(selected)
       setContentPair(next)
       setSaved(true)
+      setDirty(false)
+      setSaveNotice('تم حفظ التغييرات بنجاح')
     } catch {
-      setError(true)
+      setSaveNotice('فشل حفظ التغييرات؛ لم تُفقد البيانات. حاول مرة أخرى.')
     } finally {
       setSaving(false)
     }
   }
 
   return (
-    <main className="p-4 lg:p-8"><div className="sticky top-[112px] z-10 mb-6 flex items-center justify-between gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/95 p-4 shadow-sm backdrop-blur" dir={locale === "en" ? "ltr" : "rtl"}><div><p className="font-semibold">تغييرات محتوى الموقع</p><p className="text-xs text-[var(--color-text-muted)]">الحفظ متاح دائماً من هذا الشريط.</p></div><div className="flex gap-2"><Button variant="ghost" onClick={() => void load(true)}>{locale === "en" ? "Reset" : "تراجع"}</Button><Button disabled={saving} onClick={() => void save()}>{saving ? dashboardText(locale, "common.saving") : dashboardText(locale, "common.save")}</Button></div></div>
+    <main className="p-4 pb-36 lg:p-8 lg:pb-36"><div className={'fixed bottom-3 z-40 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/95 p-3 shadow-[0_10px_35px_rgba(0,0,0,.15)] backdrop-blur lg:bottom-6 lg:p-4 '+(locale==='en'?'left-3 right-3 lg:left-[284px] lg:right-8':'left-3 right-3 lg:left-8 lg:right-[284px]')} dir={locale === "en" ? "ltr" : "rtl"}><div aria-live="polite" role="status"><p className="text-sm font-semibold">{saving?'جاري الحفظ...':dirty?'تغييرات غير محفوظة':saved?'تم الحفظ':'محرر المحتوى'}</p><p className="text-xs text-[var(--color-text-muted)]">{saveNotice||'يمكنك حفظ التعديلات أثناء التمرير في الصفحة.'}</p></div><div className="flex shrink-0 gap-2"><Button variant="ghost" disabled={saving} onClick={() => {if(!dirty||window.confirm('تجاهل التعديلات غير المحفوظة؟'))void load(true)}}>{locale === "en" ? "Reset" : "تراجع"}</Button><Button disabled={saving||!dirty} onClick={() => void save()}>{saving ? dashboardText(locale, "common.saving") : dashboardText(locale, "common.save")}</Button></div></div>
       <div className="grid gap-5 xl:grid-cols-[290px_minmax(0,1fr)]" dir="rtl">
         <aside dir="rtl" className="flex gap-2 overflow-x-auto rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3 xl:block xl:h-fit">
           <p className="hidden px-3 py-2 text-xs font-semibold text-[var(--color-text-muted)] xl:block">صفحات الموقع</p>

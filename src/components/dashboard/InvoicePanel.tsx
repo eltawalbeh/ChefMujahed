@@ -24,6 +24,9 @@ export default function InvoicePanel({ request, items }: InvoicePanelProps) {
   const calculated = calculateInvoiceTotals(lines, taxRate)
   const subtotal = Number(request.subtotal_jod ?? request.estimated_subtotal ?? calculated.subtotalJod)
   const discount = Number(request.discount_total_jod ?? calculated.discountJod)
+  const lineDiscount = Number(calculated.discountJod)
+  const customerDiscount = Number(request.customer_discount_jod ?? 0)
+  const orderDiscount = Number(request.order_discount_jod ?? 0)
   const taxable = Number(request.taxable_amount_jod ?? Math.max(0, subtotal - discount))
   const tax = Number(request.tax_amount_jod ?? (taxable * taxRate / 100))
   const total = Number(request.final_total_jod ?? request.total_jod ?? taxable + tax)
@@ -72,7 +75,10 @@ export default function InvoicePanel({ request, items }: InvoicePanelProps) {
 
       <div className="mt-5 space-y-2 border-t border-[var(--color-border)] pt-4 text-sm">
         <div className="flex justify-between gap-4"><span className="text-[var(--color-text-muted)]">المجموع قبل الخصم</span><span>{formatJod(subtotal)}</span></div>
-        <div className="flex justify-between gap-4"><span className="text-[var(--color-text-muted)]">الخصم</span><span>{formatJod(discount)}</span></div>
+        <div className="flex justify-between gap-4"><span className="text-[var(--color-text-muted)]">خصومات المنتجات</span><span>{formatJod(lineDiscount)}</span></div>
+        {customerDiscount > 0 ? <div className="flex justify-between gap-4"><span className="text-[var(--color-text-muted)]">خصم العميل الدائم</span><span>- {formatJod(customerDiscount)}</span></div> : null}
+        {orderDiscount > 0 ? <div className="flex justify-between gap-4"><span className="text-[var(--color-text-muted)]">خصم إضافي على الطلب</span><span>- {formatJod(orderDiscount)}</span></div> : null}
+        <div className="flex justify-between gap-4 font-semibold"><span>إجمالي الخصومات</span><span>{formatJod(discount)}</span></div>
         <div className="flex justify-between gap-4"><span className="text-[var(--color-text-muted)]">المبلغ الخاضع للضريبة</span><span>{formatJod(taxable)}</span></div>
         <div className="flex justify-between gap-4"><span className="text-[var(--color-text-muted)]">الضريبة ({taxRate}%)</span><span>{formatJod(tax)}</span></div>
         <div className="flex justify-between gap-4 border-t border-[var(--color-border)] pt-3 text-base"><strong>الإجمالي</strong><strong>{formatJod(total)}</strong></div>

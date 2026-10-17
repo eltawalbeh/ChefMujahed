@@ -111,7 +111,7 @@ export default function B2BProductDetailPage() {
 
             <section className="mt-6">
               <h2 className="mb-3 font-semibold">الوحدة / الصيغة</h2>
-              <UnitSelector units={units} selectedId={customUnitMode ? '' : unitId} onChange={(id) => { setCustomUnitMode(false); setUnitId(id) }} />
+              <UnitSelector units={units} showPrice={false} selectedId={customUnitMode ? '' : unitId} onChange={(id) => { setCustomUnitMode(false); setUnitId(id) }} />
               {product.b2bAllowCustomUnit ? (
                 <div className="mt-3">
                   <button type="button" onClick={() => setCustomUnitMode((v) => !v)} className={`h-11 rounded-lg border px-4 text-sm ${customUnitMode ? 'border-[var(--color-text)] bg-[var(--color-text)] text-white' : 'border-[var(--color-border)] bg-[var(--color-surface)]'}`}>وحدة / صيغة مخصصة</button>

@@ -28,7 +28,7 @@ export default function ProductionCard({
     : request.status === 'PREPARING'
       ? 'تحديد كجاهز'
       : request.status === 'READY'
-        ? 'إرسال للتوصيل'
+        ? request.fulfillmentType === 'COLLECTION' ? 'تأكيد الاستلام' : 'إرسال للتوصيل'
         : request.status === 'OUT_FOR_DELIVERY'
           ? 'تأكيد التسليم والإكمال'
           : null

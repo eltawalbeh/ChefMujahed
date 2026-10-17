@@ -13,6 +13,7 @@ import { getPublicProductBySlug } from '@/data/catalog'
 import { formatJod } from '@/lib/format'
 import type { Product } from '@/types/product'
 import { useRequestDraft } from '@/state/RequestDraftContext'
+import { unitsForCustomerType } from '@/domain/product'
 
 export default function ProductDetailPage() {
   const { slug } = useParams()
@@ -54,7 +55,7 @@ export default function ProductDetailPage() {
         }
 
         setProduct(result)
-        setSelectedUnitId(result.units.find((unit) => unit.availability !== 'UNAVAILABLE')?.id ?? '')
+        setSelectedUnitId(unitsForCustomerType(result.units, 'B2C')[0]?.id ?? '')
       } catch {
         if (!cancelled) {
           setError('تعذر تحميل المنتج حالياً.')
@@ -145,6 +146,7 @@ export default function ProductDetailPage() {
     )
   }
 
+  const orderableUnits = unitsForCustomerType(product.units, 'B2C')
   const canAdd =
     Boolean(selectedUnitId) &&
     (product.customizationFields?.every((field) => {
@@ -153,7 +155,7 @@ export default function ProductDetailPage() {
       return Array.isArray(value) ? value.length > 0 : Boolean(value)
     }) ?? true)
 
-  const selectedUnit = product.units.find((unit) => unit.id === selectedUnitId)
+  const selectedUnit = orderableUnits.find((unit) => unit.id === selectedUnitId)
 
   function handleAddToRequest() {
     if (!canAdd || !selectedUnit) return
@@ -243,16 +245,10 @@ export default function ProductDetailPage() {
               </>
             ) : null}
 
-            <div className="mt-6">
-              <label className="mb-2 block text-sm font-semibold text-[var(--color-text)]">
-                الوحدة
-              </label>
-              <UnitSelector
-                units={product.units}
-                selectedId={selectedUnitId}
-                onChange={setSelectedUnitId}
-              />
-            </div>
+            {orderableUnits.length > 1 ? <div className="mt-6">
+              <label className="mb-2 block text-sm font-semibold text-[var(--color-text)]">الحجم / العبوة</label>
+              <UnitSelector units={orderableUnits} selectedId={selectedUnitId} onChange={setSelectedUnitId} />
+            </div> : null}
 
             <div className="mt-6 flex justify-end">
               <div>

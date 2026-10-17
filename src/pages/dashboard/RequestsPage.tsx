@@ -1,93 +1,84 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { listDashboardRequests } from '@/data/dashboard'
-import { useDashboard } from '@/state/DashboardContext'
-import type { DashboardListResponse, DashboardRequestListItem } from '@/types/dashboard'
-import { DashboardEmpty, DashboardError, DashboardLoading } from '@/components/dashboard/DashboardStates'
-import { DashboardTable, DashboardTd, DashboardTr } from '@/components/dashboard/DashboardTable'
-import { PaymentStatusBadge, RequestStatusBadge } from '@/components/dashboard/DashboardStatusBadge'
-import Button from '@/components/ui/Button'
-import { REQUEST_SOURCE_LABELS, REQUEST_SOURCES, REQUEST_STATUS_LABELS, REQUEST_STATUSES } from '@/domain/constants'
+import {useCallback,useEffect,useState} from 'react'
+import {Link} from 'react-router-dom'
+import {listDashboardRequests} from '@/data/dashboard'
+import {useDashboard} from '@/state/DashboardContext'
+import type {DashboardListResponse,DashboardRequestListItem} from '@/types/dashboard'
+import {DashboardEmpty,DashboardError,DashboardLoading} from '@/components/dashboard/DashboardStates'
+import {RequestStatusBadge} from '@/components/dashboard/DashboardStatusBadge'
+import {REQUEST_SOURCE_LABELS,REQUEST_SOURCES} from '@/domain/constants'
 import ManualRequestDialog from '@/components/dashboard/ManualRequestDialog'
+import Button from '@/components/ui/Button'
+import {formatJod} from '@/lib/format'
 
-type Period = 'today' | 'yesterday' | 'week' | 'month' | 'all'
-function inPeriod(value: string, period: Period) { const date = new Date(value); const now = new Date(); const start = new Date(now); if (period === 'all') return true; if (period === 'today') return date.toDateString() === now.toDateString(); if (period === 'yesterday') { start.setDate(now.getDate() - 1); return date.toDateString() === start.toDateString() } start.setDate(now.getDate() - (period === 'week' ? 7 : 30)); return date >= start }
-
-export default function RequestsPage() {
-  const { runtime } = useDashboard()
-  const [data, setData] = useState<DashboardListResponse<DashboardRequestListItem> | null>(null)
-  const [q, setQ] = useState('')
-  const [status, setStatus] = useState('')
-  const [source, setSource] = useState('')
-  const [type, setType] = useState('')
-  const [error, setError] = useState(false)
-  const [manualOpen, setManualOpen] = useState(false)
-  const [period, setPeriod] = useState<Period>('all')
-
-  const load = useCallback(async () => {
-    try {
-      setError(false)
-      setData(await listDashboardRequests(runtime, { q, status, source, customerType: type }))
-    } catch { setError(true) }
-  }, [runtime, q, status, source, type])
-
-  useEffect(() => { const timer = setTimeout(() => void load(), 180); return () => clearTimeout(timer) }, [load])
-
-  if (error) return <DashboardError onRetry={() => void load()} />
-  if (!data) return <DashboardLoading />
-  const visibleItems = data.items.filter((request) => inPeriod(request.submitted_at, period))
-
-  return (
-    <main className="space-y-5 p-4 lg:p-8">
-      <div className="flex flex-wrap items-end justify-between gap-3"><div className="text-right"><h2 className="text-xl font-bold">قائمة الطلبات</h2><p className="mt-1 text-sm text-[var(--color-text-muted)]">عرض، تصفية وتحديث جميع الطلبات الواردة لجميع قنوات الطلب</p></div><Button onClick={() => setManualOpen(true)}>إضافة طلب داخلي</Button></div>
-
-      <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="بحث بالمرجع، العميل أو الهاتف" className="h-11 rounded-lg border border-[var(--color-border)] bg-white px-3 outline-none xl:col-span-2" />
-          <select value={status} onChange={(e) => setStatus(e.target.value)} className="h-11 rounded-lg border border-[var(--color-border)] bg-white px-3">
-            <option value="">كل الحالات</option>
-            {REQUEST_STATUSES.map((value) => <option key={value} value={value}>{REQUEST_STATUS_LABELS[value]}</option>)}
-          </select>
-          <select value={source} onChange={(e) => setSource(e.target.value)} className="h-11 rounded-lg border border-[var(--color-border)] bg-white px-3">
-            <option value="">كل المصادر</option>
-            {REQUEST_SOURCES.map((value) => <option key={value} value={value}>{REQUEST_SOURCE_LABELS[value]}</option>)}
-          </select>
-          <select value={type} onChange={(e) => setType(e.target.value)} className="h-11 rounded-lg border border-[var(--color-border)] bg-white px-3">
-            <option value="">B2C + B2B</option>
-            <option value="B2C">B2C</option>
-            <option value="B2B">B2B</option>
-          </select>
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2">{([['today','اليوم'],['yesterday','أمس'],['week','الأسبوع الماضي'],['month','الشهر الماضي'],['all','كل الطلبات']] as Array<[Period,string]>).map(([value,label])=><button key={value} type="button" onClick={()=>setPeriod(value)} className={period===value?'rounded-lg bg-[var(--color-text)] px-3 py-2 text-xs font-semibold text-white':'rounded-lg bg-[var(--color-bg)] px-3 py-2 text-xs text-[var(--color-text-muted)]'}>{label}</button>)}</div>
-        <div className="mt-4 flex items-center justify-between border-t border-[var(--color-border)] pt-3 text-xs text-[var(--color-text-muted)]">
-          <span>تم العثور على {visibleItems.length} طلباً</span>
-          {(q || status || source || type) ? (
-            <Button size="sm" variant="ghost" onClick={() => { setQ(''); setStatus(''); setSource(''); setType('') }}>مسح الفلاتر</Button>
-          ) : <span>الفلاتر غير مفعلة</span>}
-        </div>
-      </section>
-
-      {visibleItems.length === 0 ? (
-        <DashboardEmpty title="لا توجد طلبات" description="لم يتم العثور على طلبات تطابق معايير البحث الحالية." action={{ label: 'مسح الفلاتر', onClick: () => { setQ(''); setStatus(''); setSource(''); setType('') } }} />
-      ) : (
-        <><div className="space-y-3 md:hidden">{visibleItems.map((request) => <Link key={request.id} to={`/dashboard/requests/${request.id}`} className="block rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-right shadow-[0_4px_18px_rgba(29,23,20,.04)]"><div className="flex items-start justify-between gap-3"><div><p dir="ltr" className="text-sm font-bold text-[var(--color-text)]">{request.reference}</p><p className="mt-1 text-sm font-semibold">{request.customer_label}</p></div><RequestStatusBadge status={request.status} /></div><div className="mt-4 grid grid-cols-2 gap-3 border-t border-[var(--color-border)] pt-3 text-xs"><div><span className="block text-[var(--color-text-muted)]">الدفع</span><div className="mt-1"><PaymentStatusBadge status={request.payment_status} /></div></div><div><span className="block text-[var(--color-text-muted)]">الاستلام</span><strong className="mt-1 block">{request.fulfillment_type === 'DELIVERY' ? 'توصيل' : 'استلام'}</strong></div><div><span className="block text-[var(--color-text-muted)]">النوع والمصدر</span><strong className="mt-1 block">{request.customer_type} · {REQUEST_SOURCE_LABELS[request.source]}</strong></div><div><span className="block text-[var(--color-text-muted)]">تاريخ الطلب</span><strong className="mt-1 block">{new Date(request.submitted_at).toLocaleDateString('en-JO')}</strong></div></div><span className="mt-4 block text-left text-xs font-semibold text-[var(--color-accent)]">فتح الطلب ←</span></Link>)}</div><div className="hidden md:block"><DashboardTable headers={['إجراءات','تاريخ الطلب','المسؤول','نوع التوصيل','حالة الدفع','حالة الطلب','المصدر','النوع','العميل / الشركة','المرجع']} minWidth={1180}>
-          {visibleItems.map((request) => (
-            <DashboardTr key={request.id}>
-              <DashboardTd><Link to={`/dashboard/requests/${request.id}`} className="rounded-lg bg-[var(--color-bg)] px-3 py-1.5 text-xs font-medium">تحديث</Link></DashboardTd>
-              <DashboardTd className="text-xs text-[#78716C]">{new Date(request.submitted_at).toLocaleDateString('ar-JO')}</DashboardTd>
-              <DashboardTd className="text-xs">{request.assigned_to ? 'مستخدم' : '--'}</DashboardTd>
-              <DashboardTd>{request.fulfillment_type === 'DELIVERY' ? 'توصيل' : 'استلام'}</DashboardTd>
-              <DashboardTd><PaymentStatusBadge status={request.payment_status} /></DashboardTd>
-              <DashboardTd><RequestStatusBadge status={request.status} /></DashboardTd>
-              <DashboardTd>{REQUEST_SOURCE_LABELS[request.source]}</DashboardTd>
-              <DashboardTd>{request.customer_type}</DashboardTd>
-              <DashboardTd className="font-semibold">{request.customer_label}</DashboardTd>
-              <DashboardTd><Link to={`/dashboard/requests/${request.id}`} className="font-bold text-[var(--color-text-muted)]">{request.reference}</Link></DashboardTd>
-            </DashboardTr>
-          ))}
-        </DashboardTable></div></>
-      )}
-    {manualOpen ? <ManualRequestDialog onClose={() => setManualOpen(false)} onCreated={() => void load()} /> : null}
-    </main>
-  )
+type View='all'|'NEW'|'CONTACT_REQUIRED'|'AWAITING_CONFIRMATION'|'APPROVED'|'PREPARING'|'READY'|'COMPLETED'
+const views:[View,string][]=[['all','جميع الطلبات'],['NEW','جديدة'],['CONTACT_REQUIRED','مطلوب تواصل'],['AWAITING_CONFIRMATION','بانتظار التأكيد'],['APPROVED','معتمدة'],['PREPARING','قيد التجهيز'],['READY','جاهزة'],['COMPLETED','مكتملة']]
+type Period='all'|'today'|'week'|'month'
+const periodStart=(p:Period)=>{const d=new Date();if(p==='today')d.setHours(0,0,0,0);if(p==='week')d.setDate(d.getDate()-7);if(p==='month')d.setDate(d.getDate()-30);return d}
+function nextAction(r:DashboardRequestListItem){
+  if(r.status==='NEW'||r.status==='CONTACT_REQUIRED')return 'بدء المتابعة'
+  if(r.status==='AWAITING_CONFIRMATION')return 'مراجعة واعتماد'
+  if(r.status==='READY')return r.fulfillment_type==='COLLECTION'?'تأكيد الاستلام':'إرسال للتوصيل'
+  if(r.status==='COMPLETED')return 'عرض السجل'
+  return 'عرض التفاصيل'
+}
+export default function RequestsPage(){
+  const {runtime}=useDashboard()
+  const [view,setView]=useState<View>('all')
+  const [period,setPeriod]=useState<Period>('all')
+  const [channel,setChannel]=useState('')
+  const [q,setQ]=useState('')
+  const [advanced,setAdvanced]=useState(false)
+  const [source,setSource]=useState('')
+  const [page,setPage]=useState(1)
+  const [data,setData]=useState<DashboardListResponse<DashboardRequestListItem>|null>(null)
+  const [error,setError]=useState(false)
+  const [manual,setManual]=useState(false)
+  const load=useCallback(async()=>{
+    try{setError(false);setData(await listDashboardRequests(runtime,{
+      q,customerType:channel,source,status:view==='all'?'':view,page,pageSize:50,
+    }))}catch{setError(true)}
+  },[runtime,q,channel,source,view,page])
+  useEffect(()=>{const t=window.setTimeout(()=>void load(),200);return()=>window.clearTimeout(t)},[load])
+  useEffect(()=>{const id=window.setInterval(()=>{if(!document.hidden)void load()},30000);return()=>window.clearInterval(id)},[load])
+  const updateView=(v:View)=>{setView(v);setPage(1)}
+  const reset=()=>{setPage(1);setPeriod('all');setView('all');setChannel('');setSource('');setQ('')}
+  if(error&&!data)return <DashboardError onRetry={()=>void load()}/>
+  if(!data)return <DashboardLoading/>
+  const items=data.items.filter(r=>period==='all'||new Date(r.submitted_at)>=periodStart(period))
+  const totalPages=Math.max(1,Math.ceil(data.total/data.pageSize))
+  return <main dir="rtl" className="space-y-5 p-4 lg:p-8">
+    <div className="flex flex-wrap items-center justify-between gap-3"><div><h1 className="text-2xl font-bold">صندوق الطلبات</h1><p className="text-sm text-[var(--color-text-muted)]">اعرف المطلوب من كل طلب بدون الدخول في تفاصيله.</p></div>
+      <div className="flex gap-2"><Button variant="secondary" onClick={()=>void load()}>تحديث</Button><Button onClick={()=>setManual(true)}>إضافة طلب</Button></div></div>
+    <section className="space-y-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <div role="tablist" aria-label="حالات الطلب" className="flex gap-2 overflow-x-auto pb-2">{views.map(([v,label])=><button key={v} role="tab" aria-selected={view===v} onClick={()=>updateView(v)}
+        className={'shrink-0 rounded-xl px-3 py-2 text-sm '+(view===v?'bg-[var(--color-text)] font-bold text-white':'bg-[var(--color-bg)] text-[var(--color-text-muted)]')}>{label}</button>)}</div>
+      <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+        <input aria-label="بحث عن طلب" value={q} onChange={e=>{setQ(e.target.value);setPage(1)}} placeholder="بحث برقم الطلب، اسم العميل أو الهاتف" className="h-11 w-full rounded-xl border border-[var(--color-border)] bg-white px-3"/>
+        <select aria-label="نوع العميل" value={channel} onChange={e=>{setChannel(e.target.value);setPage(1)}} className="h-11 rounded-xl border border-[var(--color-border)] bg-white px-3"><option value="">B2C + B2B</option><option value="B2C">B2C</option><option value="B2B">B2B</option></select>
+        <button type="button" aria-expanded={advanced} onClick={()=>setAdvanced(!advanced)} className="h-11 rounded-xl border border-[var(--color-border)] px-4 text-sm">فلاتر إضافية</button>
+      </div>
+      {advanced?<div className="flex flex-wrap gap-2"><select aria-label="مصدر الطلب" value={source} onChange={e=>{setSource(e.target.value);setPage(1)}} className="h-11 rounded-xl border border-[var(--color-border)] bg-white px-3"><option value="">كل المصادر</option>{REQUEST_SOURCES.map(s=><option value={s} key={s}>{REQUEST_SOURCE_LABELS[s]}</option>)}</select>
+        {([['all','كل الأوقات'],['today','اليوم'],['week','7 أيام'],['month','30 يوم']] as const).map(([p,label])=><button key={p} type="button" onClick={()=>setPeriod(p)} className={'rounded-xl px-3 text-sm '+(period===p?'bg-[var(--color-text)] text-white':'bg-[var(--color-bg)]')}>{label}</button>)}
+        <Button size="sm" variant="ghost" onClick={reset}>مسح الفلاتر</Button></div>:null}
+    </section>
+    {error?<p role="alert" className="text-sm text-red-700">تعذر تحديث القائمة. يتم عرض آخر بيانات محمّلة.</p>:null}
+    <div className="flex items-center justify-between gap-3 text-xs text-[var(--color-text-muted)]"><p>{data.total} طلب مطابق للفلاتر الأساسية · {items.length} ظاهر بهذه الصفحة</p><p>تحديث تلقائي كل 30 ثانية</p></div>
+    {!items.length?<DashboardEmpty title="لا توجد طلبات" description="غيّر الفلتر أو راجع صفحة أخرى." action={{label:'عرض كل الطلبات',onClick:reset}}/>:
+    <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+      <div className="hidden grid-cols-[1fr_1.2fr_1fr_110px_150px] gap-4 bg-[var(--color-bg)] px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)] lg:grid"><span>الطلب</span><span>العميل</span><span>الحالة والموعد</span><span>الإجمالي</span><span>الإجراء التالي</span></div>
+      {items.map(r=><Link to={'/dashboard/requests/'+r.id} key={r.id} className="block border-t border-[var(--color-border)] p-4 transition-colors hover:bg-[var(--color-bg)] focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] lg:grid lg:grid-cols-[1fr_1.2fr_1fr_110px_150px] lg:items-center lg:gap-4">
+        <div className="flex items-center justify-between gap-2 lg:block"><div><strong dir="ltr" className="text-sm">{r.reference}</strong><p className="mt-1 text-xs text-[var(--color-text-muted)]">{r.customer_type} · {r.fulfillment_type==='DELIVERY'?'توصيل':'استلام'}</p></div><div className="lg:hidden"><RequestStatusBadge status={r.status}/></div></div>
+        <p className="mt-2 text-sm font-semibold lg:mt-0">{r.customer_label}</p>
+        <div className="mt-2 hidden lg:block"><RequestStatusBadge status={r.status}/><p className="mt-1 text-xs text-[var(--color-text-muted)]">{new Date(r.submitted_at).toLocaleDateString('ar-JO')}</p></div>
+        <p dir="ltr" className="mt-2 text-right text-sm font-semibold lg:mt-0">{formatJod(Number(r.total_jod||0))}</p>
+        <p className="mt-3 inline-block rounded-lg bg-[var(--color-text)] px-3 py-2 text-xs font-semibold text-white lg:mt-0 lg:text-center">{nextAction(r)} ←</p>
+      </Link>)}
+    </div>}
+    <nav aria-label="الصفحات" className="flex items-center justify-center gap-3">
+      <Button size="sm" variant="secondary" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}>السابق</Button>
+      <span className="text-sm">{page} / {totalPages}</span>
+      <Button size="sm" variant="secondary" disabled={page>=totalPages} onClick={()=>setPage(p=>p+1)}>التالي</Button>
+    </nav>
+    {manual?<ManualRequestDialog onClose={()=>setManual(false)} onCreated={()=>void load()}/>:null}
+  </main>
 }

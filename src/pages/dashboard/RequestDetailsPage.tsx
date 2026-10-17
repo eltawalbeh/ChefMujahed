@@ -80,7 +80,7 @@ export default function RequestDetailsPage() {
     try {
       const result=await addDashboardInvoiceAdjustment(runtime,id,type,value,reason,itemId)
       setAdjustmentSummary(result)
-      setFeedback('تم تسجيل مذكرة الخصم الاستثنائية مع السبب في سجل الطلب. الفاتورة الأصلية لم تتغير.')
+      setFeedback('تم اعتماد الخصم وإظهاره كسطر جديد في الفاتورة. السبب محفوظ في السجل الداخلي.')
       await load()
     }catch(e:any){const msg=String(e?.message??'تعذر تسجيل مذكرة الخصم');setFeedback(msg);throw e}
     finally{setSaving(false)}
@@ -168,7 +168,7 @@ export default function RequestDetailsPage() {
           <p className="mb-3 text-sm text-[var(--color-text-muted)]">خصم العميل الدائم: {formatJod(Number(request.customer_discount_jod??0))} {data.customer?'· من ملف العميل':'· اربط العميل لتطبيق خصمه'}</p>
           {invoiceIssued?<>
             <div className="mb-4 rounded-xl border border-[#E8D3AD] bg-[#FFF7E8] p-3 text-sm leading-6 text-[#6D472B]">
-              الفاتورة الأصلية صادرة ومقفلة. {pricingRoleAllowed?'يمكنك تسجيل مذكرة خصم لاحقة بشرح إجباري؛ لا تتغير مبالغ الفاتورة الأصلية.':'تعديل ما بعد الإصدار متاح فقط للمدير ومدير النظام.'}
+              الفاتورة الأصلية صادرة ومقفلة. {pricingRoleAllowed?'يمكنك إضافة خصم مع سبب إجباري؛ سيظهر كسطر في الفاتورة، وتبقى بيانات الإصدار الأصلية محفوظة في السجل.':'تعديل ما بعد الإصدار متاح فقط للمدير ومدير النظام.'}
             </div>
             {adjustmentError?<p role="alert" className="mb-3 text-sm text-red-700">{adjustmentError}</p>:null}
             {pricingRoleAllowed&&adjustmentSummary?<InvoiceAdjustmentEditor summary={adjustmentSummary} busy={saving} onSave={addInvoiceAdjustment}/>:null}
@@ -180,7 +180,7 @@ export default function RequestDetailsPage() {
         </Section>
         <Section title={invoiceIssued?'خصومات استثنائية على المنتجات':'خصومات المنتجات'}>
           {invoiceIssued?<>
-            <p className="mb-3 text-xs leading-6 text-[var(--color-text-muted)]">كل خصم منتج بعد إصدار الفاتورة يصدر كمذكرة جديدة، ولا يغير سعر البند في النسخة الأصلية.</p>
+            <p className="mb-3 text-xs leading-6 text-[var(--color-text-muted)]">خصومات المنتجات تظهر ضمن سطر «خصم إضافي» في الفاتورة، وتبقى أسبابها محفوظة داخليًا.</p>
             {pricingRoleAllowed&&adjustmentSummary?<div className="space-y-3">
               {data.items.map(item=><InvoiceAdjustmentEditor key={item.id} item={item} summary={adjustmentSummary} busy={saving} onSave={addInvoiceAdjustment}/>)}
             </div>:<p className="text-sm text-[var(--color-text-muted)]">{pricingRoleAllowed?'جاري تحميل سجل الخصومات...':'صلاحية الإضافة للمدير ومدير النظام فقط.'}</p>}
@@ -200,7 +200,21 @@ export default function RequestDetailsPage() {
       <div className="space-y-2">{data.notes.map(n=><div key={n.id} className="rounded-xl bg-[var(--color-bg)] p-3 text-sm">{n.body}</div>)}</div>
       <textarea value={note} onChange={e=>setNote(e.target.value)} rows={3} placeholder="إضافة ملاحظة" className="mt-3 w-full rounded-xl border border-[var(--color-border)] p-3 text-sm"/>
       <Button disabled={!note.trim()||saving} onClick={()=>void mutate(async()=>{const r=await addDashboardRequestNote(runtime,id,note);setNote('');return r}).catch(()=>{})}>حفظ الملاحظة</Button>
-    </Section><Section title="سجل النشاط"><div className="space-y-3">{data.activity.map(a=><div key={a.id} className="border-b border-[var(--color-border)] pb-3 text-sm"><p>{a.description}</p><p className="mt-1 text-xs text-[var(--color-text-muted)]">{new Date(a.created_at).toLocaleString('ar-JO')}</p></div>)}</div></Section></div>:null}
+    </Section><Section title="سجل النشاط"><div className="space-y-3">{data.activity.map(a=><div key={a.id} className="border-b border-[var(--color-border)] pb-3 text-sm"><p>{a.description}</p><p className="mt-1 text-xs text-[var(--color-text-muted)]">{new Date(a.created_at).toLocaleString('ar-JO')}</p></div>)}</div></Section>
+      {adjustmentSummary?.adjustments.length?<Section title="سجل الخصومات الاستثنائية · داخلي">
+        <p className="mb-3 text-xs leading-6 text-[var(--color-text-muted)]">هذا السجل مخصص للإدارة فقط، ولا يظهر في الفاتورة أو ملف PDF المرسل للعميل.</p>
+        <div className="space-y-3">
+          {adjustmentSummary.adjustments.map(a=><div key={a.id} className="rounded-xl border border-[var(--color-border)] p-3 text-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <strong>خصم #{a.revision} · {a.item_id?'على منتج':'على الطلب'}</strong>
+              <bdi dir="ltr" className="font-bold">- {formatJod(a.amount_jod)}</bdi>
+            </div>
+            <p className="mt-2 whitespace-pre-wrap text-sm">{a.reason}</p>
+            <p className="mt-2 text-xs text-[var(--color-text-muted)]">{a.actor_name} · {a.actor_role} · {new Date(a.created_at).toLocaleString('ar-JO')}</p>
+          </div>)}
+        </div>
+      </Section>:null}
+    </div>:null}
     </div>
   </main>
 }

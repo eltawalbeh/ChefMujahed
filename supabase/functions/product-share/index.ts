@@ -1,6 +1,5 @@
 // Public read-only social sharing endpoint. Crawler receives server-generated OG meta.
 // Human visitors are sent to the canonical Figma Make storefront product route.
-import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const origin=(Deno.env.get('SITE_URL')||'https://chefmujahed.com').replace(/\/$/,'')
 const projectUrl=Deno.env.get('SUPABASE_URL')||'https://hqvxhhhwzhefydvwlpje.supabase.co'
@@ -16,14 +15,22 @@ Deno.serve(async(req)=>{
     const channel=(url.searchParams.get('channel')||'B2C').toUpperCase()
     if(!slug||slug.length>150||!(/^[\p{L}\p{N}_-]+$/u.test(slug))||!['B2B','B2C'].includes(channel))return error('Invalid product link',400)
     if(!anonKey)return error('Public catalog API is not configured',503)
-    const db=createClient(projectUrl,anonKey,{auth:{persistSession:false,autoRefreshToken:false}})
-    const {data:product,error:dbError}=await db.from('products').select('id,name_ar,slug,short_description_ar,channel')
-      .eq('slug',slug).eq('public_visible',true).eq('status','ACTIVE').eq('availability','AVAILABLE')
-      .in('channel',channel==='B2B'?['B2B','BOTH']:['B2C','BOTH']).maybeSingle()
-    if(dbError){console.error('Product OG catalog query failed',dbError.code);return error('Product not available',503)}
+    const getPublic=async(path:string)=>{
+      const res=await fetch(projectUrl+'/rest/v1/'+path,{headers:{apikey:anonKey,Authorization:'Bearer '+anonKey,Accept:'application/json'}})
+      if(!res.ok)throw new Error('Public catalog returned '+res.status)
+      return await res.json()
+    }
+    const channelList=channel==='B2B'?'(B2B,BOTH)':'(B2C,BOTH)'
+    const params=new URLSearchParams({
+      select:'id,name_ar,slug,short_description_ar,channel',
+      slug:'eq.'+slug,public_visible:'eq.true',status:'eq.ACTIVE',availability:'eq.AVAILABLE',
+      channel:'in.'+channelList,limit:'1',
+    })
+    const [product]=await getPublic('products?'+params.toString())
     if(!product)return error('Product not found')
-    const {data:imgs}=await db.from('product_images').select('image_url,is_primary,sort_order')
-      .eq('product_id',product.id).eq('is_active',true).order('is_primary',{ascending:false}).order('sort_order',{ascending:true}).limit(4)
+    const imageParams=new URLSearchParams({select:'image_url,is_primary,sort_order',
+      product_id:'eq.'+product.id,is_active:'eq.true',order:'is_primary.desc,sort_order.asc',limit:'4'})
+    const imgs=await getPublic('product_images?'+imageParams.toString())
     const validImage=(imgs||[]).find(x=>{try{return new URL(x.image_url).protocol==='https:'}catch{return false}})?.image_url||''
     const path=(channel==='B2B'?'/business/product/':'/product/')+encodeURIComponent(product.slug)
     const canonical=origin+path

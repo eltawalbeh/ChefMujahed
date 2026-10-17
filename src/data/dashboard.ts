@@ -545,3 +545,28 @@ export async function updateDashboardOrderDiscount(
     p_reason: reason.trim() || null,
   })
 }
+
+
+export type InvoiceAdjustment = {
+  id:string; request_id:string; item_id:string|null; revision:number;
+  discount_type:'PERCENT'|'FIXED'; discount_value:number; amount_jod:number;
+  reason:string; actor_id:string; actor_role:string; actor_name:string;
+  created_at:string; balance_after_jod:number; invoice_number:string|null;
+}
+export type InvoiceAdjustmentSummary = {
+  original_total_jod:number; adjustments_total_jod:number; adjusted_balance_jod:number;
+  invoice_issued:boolean; payment_status:string; adjustments:InvoiceAdjustment[];
+}
+export async function getDashboardInvoiceAdjustments(runtime:DashboardRuntime,requestId:string):Promise<InvoiceAdjustmentSummary>{
+  if(runtime.mode==='preview') return {original_total_jod:0,adjustments_total_jod:0,adjusted_balance_jod:0,invoice_issued:false,payment_status:'NOT_RECORDED',adjustments:[]}
+  return secureRpc<InvoiceAdjustmentSummary>('dashboard_get_invoice_adjustments',{p_request_id:requestId})
+}
+export async function addDashboardInvoiceAdjustment(
+  runtime:DashboardRuntime,requestId:string,type:'PERCENT'|'FIXED',value:number,reason:string,itemId?:string,
+):Promise<InvoiceAdjustmentSummary>{
+  if(runtime.mode==='preview')throw new Error('سجّل الدخول إلى الإدارة لحفظ خصم استثنائي.')
+  return secureRpc<InvoiceAdjustmentSummary>('dashboard_add_invoice_discount_adjustment',{
+    p_request_id:requestId,p_discount_type:type,p_discount_value:value,p_reason:reason,
+    p_item_id:itemId??null,
+  })
+}

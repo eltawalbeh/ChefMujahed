@@ -14,12 +14,14 @@ import { formatJod } from '@/lib/format'
 import type { Product } from '@/types/product'
 import { useRequestDraft } from '@/state/RequestDraftContext'
 import { unitsForCustomerType } from '@/domain/product'
+import ProductShareAction, { useProductSocialMeta } from '@/components/public/ProductShareAction'
 
 export default function ProductDetailPage() {
   const { slug } = useParams()
   const { addItem, isRequestOpen, openRequest } = useRequestDraft()
 
   const [product, setProduct] = useState<Product | null>(null)
+  useProductSocialMeta(product,'B2C')
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [error, setError] = useState('')
@@ -223,6 +225,8 @@ export default function ProductDetailPage() {
                   'وصف تفصيلي للمنتج يوضح المكونات والمميزات الأساسية. هذا النص هو مجرد نص توضيحي للتعريف بالمنتج.'}
               </p>
             </div>
+
+            <div className="mt-4"><ProductShareAction product={product} channel="B2C"/></div>
 
             <div className="my-6 border-t border-[var(--color-border)]" />
 

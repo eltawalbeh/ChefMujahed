@@ -13,11 +13,13 @@ import { getB2BProductBySlug } from '@/data/catalog'
 import { useB2BRequestDraft } from '@/state/B2BRequestDraftContext'
 import type { Product } from '@/types/product'
 import { unitsForCustomerType } from '@/domain/product'
+import ProductShareAction, { useProductSocialMeta } from '@/components/public/ProductShareAction'
 
 export default function B2BProductDetailPage() {
   const { slug = '' } = useParams()
   const { addItem, openRequest } = useB2BRequestDraft()
   const [product, setProduct] = useState<Product | null>(null)
+  useProductSocialMeta(product,'B2B')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [quantity, setQuantity] = useState(1)
@@ -107,6 +109,7 @@ export default function B2BProductDetailPage() {
             <div className="inline-flex items-center gap-2 rounded-lg border border-[rgba(112,138,100,.2)] bg-[rgba(112,138,100,.1)] px-4 py-2 text-sm font-semibold text-[#708A64]"><span className="size-2 rounded-full bg-[#708A64]"/>طلبات الشركات مخصص</div>
             <h1 className="mt-3 text-3xl font-bold md:text-[40px]">{product.name}</h1>
             <p className="mt-4 leading-7 text-[var(--color-text-muted)]">{product.longDescription || product.shortDescription || 'وصف تفصيلي للمنتج.'}</p>
+            <div className="mt-4"><ProductShareAction product={product} channel="B2B"/></div>
             <div className="mt-6 rounded-xl bg-[var(--color-surface)] p-4 text-center text-sm font-medium text-[var(--color-text-muted)]">سيتم تحديد السعر بعد مراجعة الطلب</div>
 
             <section className="mt-6">

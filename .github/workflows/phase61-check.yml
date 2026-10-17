@@ -1,0 +1,42 @@
+name: Phase 61 Finance + Social Share QA
+on:
+  push:
+    branches: [phase-61-postinvoice-adjustments-social-og]
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'supabase/functions/product-share/**'
+      - 'supabase/migrations/20261017000700_post_invoice_discount_adjustments.sql'
+      - '.github/workflows/phase61-check.yml'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - name: Production frontend build
+        run: pnpm build
+      - name: TypeScript audit (preexisting technical debt reported)
+        continue-on-error: true
+        run: pnpm exec tsc --noEmit
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Edge Function syntax check
+        run: deno check supabase/functions/product-share/index.ts
+      - name: Public product social preview smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://hqvxhhhwzhefydvwlpje.supabase.co/functions/v1/product-share?slug=cm-050&channel=B2C'
+          curl --retry 3 --retry-delay 2 --fail --silent --show-error "$URL" -o /tmp/cm-og-preview.html
+          grep -q 'property="og:image"' /tmp/cm-og-preview.html
+          grep -q 'Pumpkin Donut' /tmp/cm-og-preview.html
+          grep -q '/product/cm-050' /tmp/cm-og-preview.html
+          grep -q 'twitter:image' /tmp/cm-og-preview.html
+          STATUS="$(curl --silent --output /dev/null --write-out '%{http_code}' 'https://hqvxhhhwzhefydvwlpje.supabase.co/functions/v1/product-share?slug=missing-product-404&channel=B2C')"
+          test "$STATUS" = "404"

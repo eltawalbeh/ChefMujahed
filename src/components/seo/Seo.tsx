@@ -67,6 +67,9 @@ export default function Seo() {
   useEffect(() => {
     const siteUrl = window.location.origin
     const canonicalUrl = `${siteUrl}${location.pathname}`
+    // Avoid leaking the previous product image into a different page's share preview.
+    document.head.querySelector('meta[property="og:image"]')?.remove()
+    document.head.querySelector('meta[name="twitter:image"]')?.remove()
     const meta = pageMeta[location.pathname] ?? {
       title: 'الشيف مجاهد',
       description: 'خدمات الطعام والتموين والضيافة من الشيف مجاهد.'

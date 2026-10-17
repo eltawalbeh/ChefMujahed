@@ -14,10 +14,9 @@ function upsert(name:string,content:string,property=false){
   if(!tag){tag=document.createElement('meta');tag.setAttribute(attr,name);document.head.appendChild(tag)}
   tag.content=content
 }
-export function useProductSocialMeta(product:Product|null){
+export function useProductSocialMeta(product:Product|null, channel:'B2C'|'B2B'='B2C'){
   useEffect(()=>{
     if(!product)return
-    const channel=product.channel==='B2B'?'B2B':'B2C'
     const title=product.name+' | الشيف مجاهد'
     const description=product.shortDescription||product.longDescription||'اكتشف '+product.name+' من الشيف مجاهد'
     const image=product.images?.find(i=>i.isPrimary)?.url||product.images?.[0]?.url||''
@@ -28,9 +27,10 @@ export function useProductSocialMeta(product:Product|null){
     upsert('og:type','product',true);upsert('og:url',productShareUrl(product,channel),true)
     upsert('twitter:card','summary_large_image');upsert('twitter:title',title);upsert('twitter:description',description)
     if(image){upsert('og:image',image,true);upsert('twitter:image',image)}
+    else {document.head.querySelector('meta[property="og:image"]')?.remove();document.head.querySelector('meta[name="twitter:image"]')?.remove()}
     const link=document.querySelector<HTMLLinkElement>('link[rel="canonical"]')
     if(link)link.href=canonical
-  },[product])
+  },[product,channel])
 }
 export default function ProductShareAction({product,channel}:{product:Product;channel:'B2C'|'B2B'}){
   const [copied,setCopied]=useState(false)

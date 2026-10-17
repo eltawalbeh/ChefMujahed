@@ -19,7 +19,7 @@ export default function B2BProductDetailPage() {
   const { slug = '' } = useParams()
   const { addItem, openRequest } = useB2BRequestDraft()
   const [product, setProduct] = useState<Product | null>(null)
-  useProductSocialMeta(product)
+  useProductSocialMeta(product,'B2B')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [quantity, setQuantity] = useState(1)
